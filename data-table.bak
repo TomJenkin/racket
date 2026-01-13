@@ -1,0 +1,75 @@
+#lang racket
+
+(require csv-reading
+         racket/date
+         plot)
+
+(plot-new-window? #t)
+
+(define (string->date-iso str)
+  (apply (λ (y m d) (date 0 0 0 d m y 0 0 #f 0))
+         (map string->number (string-split str "-"))))
+
+(define file-path "C:/Users/tomje/Downloads")
+(define file-name (string-append file-path "/SP500.csv"))
+(displayln file-name)
+(file-exists? file-name)
+
+; returns list of rows
+(define dt-rows (call-with-input-file file-name
+  (lambda (in)
+    (csv->list in))))
+
+;; convert to list of columns
+(define dt-columns (apply map list dt-rows))
+
+(define dt-headers (car dt-rows))
+(define dt-data (cdr dt-rows))
+
+(struct dt-frame (headers data))
+
+(define dt1 (dt-frame dt-headers dt-data))
+
+(dt-frame? dt1)
+
+(define fn (lambda (ls) (not (member "" ls))))
+       
+(define dt-data-clean (filter fn dt-data) )
+
+dt1
+
+(define dt-data-cleaner (map (lambda (pair)
+       (list (string->date-iso (first pair))
+             (string->number (second pair))))
+     dt-data-clean))
+
+(define dt-data-cleaner-t (apply map list dt-data-cleaner))
+
+(define xs (second dt-data-cleaner-t))
+
+; Plot against index (day number)
+(parameterize ([plot-width 800]
+               [plot-height 500])
+(plot (lines (for/list ([i (length xs)] [price xs])
+               (vector i price))
+             #:color "blue"
+             #:width 1)
+      #:x-label "Day"
+      #:y-label "Price ($)"
+      #:title file-name))
+
+#|
+Looking at the source code, the data-frame struct is defined roughly like this:
+
+(struct data-frame (series           ; vector of series
+                    row-count        ; number of rows
+                    col-index        ; hash mapping column names -> indices
+                    [metadata #:mutable])  ; optional metadata
+  #:property prop:sequence
+  (lambda (df) (in-data-frame df))
+  #:methods gen:custom-write
+  [(define (write-proc df port mode)
+     (write-data-frame df port mode))])
+|#
+
+;; testing
