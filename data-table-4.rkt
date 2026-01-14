@@ -57,7 +57,7 @@
 
 dt
 
-(define dt2 (dt-append dt "c" (list 3 4 5)))
+(define dt2 (dt-append dt 'c (list 3 4 5)))
 
 dt2
 
@@ -67,3 +67,5 @@ dt2
 
 (data-table-hash dt2)
 
+(hash-keys (data-table-hash dt2))
+(hash-values (data-table-hash dt2))
