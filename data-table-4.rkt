@@ -15,7 +15,7 @@
     (error type-name 
            "requires immutable hash (use (hash ...) or (hasheq ...), not make-hash)"))
   
-  ;; validate all values are lists
+  ;; validate all values are lists (change to also include vectors!)
   (for ([(k v) (in-hash hash)])
     (unless (list? v)
       (error type-name "value for key ~e is not a list: ~e" k v)))
