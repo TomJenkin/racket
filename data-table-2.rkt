@@ -43,12 +43,18 @@
   (display (dt-frame-headers dt))
   (displayln (take (dt-frame-data dt) n)))
 
+;; creates table as simple hash
 (define (dt-create data)
   (unless (apply = (map length data))
     (error 'dt-create "lists lengths are unequal"))
   (make-immutable-hash
    (map (lambda (lst) (cons (car lst) (cdr lst)))
         data)))
+
+;; head of data frame
+(define (dt-head2 dt n)
+  (for/hash ([(k v) (in-hash dt)])
+    (values k (take v n))))
 
 #| ======================== executions ======================== |#
 
@@ -64,7 +70,7 @@
 
 (define dt (dt-generate "C:/Users/tomje/Downloads/SP500.csv"))
 
-dt
+;;dt
 
 (dt-head dt 3)
 
@@ -77,5 +83,5 @@ dt
 
 (define dt22 (dt-generate2 "C:/Users/tomje/Downloads/SP500.csv"))
 
-dt22
+(dt-head2 dt22 3)
 

@@ -6,38 +6,33 @@
          racket/list
          plot)
 
+#| ======================== utilities ======================== |#
 
+;; pipeline macro named pipe
+(define-syntax pipe
+  (syntax-rules ()
+    [(_ x) x]
+    [(_ x f more ...) (pipe (f x) more ...)]))
 
-(define h1 make-hash)
+;; reverse order compose functions
+(define (compose-pipe . fs)
+  (apply compose (reverse fs)))
 
-(define h2 (hash 'a (list 1 2 3) 'b (list 2 3 4)))
+#| ======================== functions ======================== |#
 
-(define h3 (hash))
+;; read csv
+(define (read-csv file-name)
+  (call-with-input-file file-name csv->list))
 
-(map list '(1 2 3) '(2 3 4))
+;; remove nulls
+(define (dt-clean dt)
+  (filter (lambda (ls) (not (member "" ls))) dt))
 
-h1
-h2
-h3
+;; transpose list of lists
+(define (dt-transpose dt)
+  (apply map list dt))
 
-(define x (list "hello" 1 2 3 4 5))
-(define y (list "tom" 1 2 3 4 5))
-(define z (list "tom" 1 2 3 4 22))
-
-(hash (car x) (cdr x) (car y) (cdr y))
-
-
-(define lists (list x y))
-
-(define h
-  (make-immutable-hash
-   (map (lambda (lst) (cons (car lst) (cdr lst)))
-        lists)))
-
-h
-
-(define data (list x y z))
-
+;; creates table as hash from list of lists
 (define (dt-create data)
   (unless (apply = (map length data))
     (error 'dt-create "lists lengths are unequal"))
@@ -45,13 +40,37 @@ h
    (map (lambda (lst) (cons (car lst) (cdr lst)))
         data)))
 
+;; head of data frame
+(define (dt-head dt n)
+  (for/hash ([(k v) (in-hash dt)])
+    (values k (take v n))))
+
+;; rename series names
+(define (dt-rename dt ns)
+  (for/hash ([(k v) (in-hash dt)])
+    (values (hash-ref ns k k) v)))
+
+;; change type of series
+(define (dt-retype dt fn ns)
+  (for/hash ([(k v) (in-hash dt)])
+    (if (member k ns) (values k (map fn v)) (values k v))))
+
+;; pipleline functions
+(define dt-generate (compose-pipe
+                     read-csv
+                     dt-clean
+                     dt-transpose
+                     dt-create
+                     (lambda (dt) (dt-rename dt (hash "SP500" "close" "observation_date" "date")))
+                     (lambda (dt) (dt-retype dt string->number (list "close")))
+                     ))
+
+#| ======================== executions ======================== |#
+
+(define dt (dt-generate "C:/Users/tomje/Downloads/SP500.csv"))
+
+(dt-head dt 3)
+
+;;(dt-rename dt (hash "SP500" "tic"))
 
 
-
-(define (fn2 x y) (+ x y))
-
-(fn2 33 44)
-
-(dt-create data)
-
-(apply = (map length data))
