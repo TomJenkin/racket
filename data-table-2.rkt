@@ -43,6 +43,13 @@
   (display (dt-frame-headers dt))
   (displayln (take (dt-frame-data dt) n)))
 
+(define (dt-create data)
+  (unless (apply = (map length data))
+    (error 'dt-create "lists lengths are unequal"))
+  (make-immutable-hash
+   (map (lambda (lst) (cons (car lst) (cdr lst)))
+        data)))
+
 #| ======================== executions ======================== |#
 
 ;(define dt1 (read-csv "C:/Users/tomje/Downloads/SP500.csv"))
@@ -60,3 +67,15 @@
 dt
 
 (dt-head dt 3)
+
+(define dt-generate2 (compose-pipe
+                     read-csv
+                     dt-clean
+                     dt-transpose
+                     dt-create
+                     ))
+
+(define dt22 (dt-generate2 "C:/Users/tomje/Downloads/SP500.csv"))
+
+dt22
+
