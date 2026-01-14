@@ -1,5 +1,7 @@
 #lang racket
 
+(require rackunit)
+
 #| =================== structs =================== |#
 
 (define (data-table-validate hash type-name)
@@ -33,39 +35,52 @@
 
 #| =================== functions =================== |#
 
-;; constructor
-(define (make-data-table . args)
-  (data-table (apply hash args)))
-
-;; accessor that looks like hash-ref
+;; immutable ref
 (define (dt-ref dt key [default #f])
   (hash-ref (data-table-hash dt) key default))
 
-;; extend data table in an immutable way (create new)
-(define (dt-append dt key value)
+;; immutable set
+(define (dt-set dt key value)
   (data-table (hash-set (data-table-hash dt) key value)))
 
-#| =================== examples =================== |#
+;; immutable remove
+(define (dt-remove dt key)
+  (data-table (hash-remove (data-table-hash dt) key)))
 
-;; Example usage
-(define dt (make-data-table 'a '(1 2 3) 'b '(4 5 6)))
-(dt-ref dt 'a)  ; Returns: '(1 2 3)
+;; immutable update
+(define (dt-update dt key updater)
+  (data-table (hash-update (data-table-hash dt) key updater)))
 
-;; This will error:
-;; (make-data-table 'x '(1 2) 'y '(1 2 3))
-;; Error: all lists must have same length...
+;; immutable has key
+(define (dt-has-key dt key)
+  (hash-has-key? (data-table-hash dt) key))
 
-dt
+#| =================== testing =================== |#
 
-(define dt2 (dt-append dt 'c (list 3 4 5)))
+(module+ test
 
-dt2
+  (define module-name (file-name-from-path 
+                       (variable-reference->module-source (#%variable-reference))))
 
-;;(define dt3 (dt-append dt "z" (list 3 4 5 6)))
+  (printf "running module: ~a\n" module-name)
 
-;;dt3
+  (define dt1 (data-table (hash 'a '(1 2 3) 'b '(4 5 6))))
+  
+  (check-equal? (dt-ref dt1 'a) '(1 2 3))
 
-(data-table-hash dt2)
+  (define dt2 (dt-set dt1 'c '(5 6 7)))
+  (check-equal? (dt-ref dt2 'c) '(5 6 7))
 
-(hash-keys (data-table-hash dt2))
-(hash-values (data-table-hash dt2))
+  (define dt3 (dt-remove dt2 'c))
+  (check-equal? dt1 dt3)
+
+  (define (double-list lst)
+    (map (lambda (x) (* 2 x)) lst))
+  (define dt4 (dt-update dt1 'a double-list))
+  (check-equal? (dt-ref dt4 'a) '(2 4 6))
+
+  (check-equal? (dt-has-key dt1 'a) #t)
+  
+  (displayln "testing success!")
+  
+  )
