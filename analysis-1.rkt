@@ -33,6 +33,8 @@
    #:out-file (string-append file-path "test.png")
    #:title (string-append "Market: " file-name)))
 
+#|
+
 (define (rolling f n lst [step 1])
   (if (< (length lst) n)
       '()
@@ -53,10 +55,36 @@
       (list idx "")
   (list idx value)))
 
+|#
 
+
+;; rolling function
+(define (rolling fn n ls)
+  (for/list ([i (in-range (- (length ls) n -1))])
+    (fn (take (drop ls i) n))))
+
+;; Statistic functions to pass in
+(define (mean win) (/ (apply + win) (length win)))
+(define (sum win) (apply + win))
+(define (maximum win) (apply max win))
+(define (minimum win) (apply min win))
+
+;; Usage
+(define data '(1 2 3 4 5 6 7 8 9 10))
+
+(rolling mean 3 data)     ;; => (2 3 4 5 6 7 8 9)
+(rolling sum 3 data)      ;; => (6 9 12 15 18 21 24 27)
+(rolling maximum 3 data)  ;; => (3 4 5 6 7 8 9 10)
 
 ;;(for/list ([value (dataframe-ref df "close")] [idx (in-naturals)])
 ;;  (list idx value))
+
+(define win-length 5)
+
+(for/list ([value (dataframe-ref df "close")] [idx (in-naturals)])
+  (if (< idx (- win-length 1))
+      (list idx "")
+  (list idx value)))
 
 
 #| =================== tests =================== |#

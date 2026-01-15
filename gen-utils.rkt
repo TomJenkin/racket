@@ -5,7 +5,8 @@
 
 (provide pipe
          compose-pipe
-         assert)
+         assert
+         enumerate)
 
 #| =================== public =================== |#
 
@@ -19,10 +20,16 @@
 (define (compose-pipe . fs)
   (apply compose (reverse fs)))
 
-;; assert condition
+;; assert
 (define (assert condition [msg "assertion failed"])
   (unless condition
     (error 'assert msg)))
+
+;; enumerate
+(define (enumerate ls [start 0])
+  (for/list ([value ls]
+             [ix (in-naturals start)])
+    (cons ix value)))
 
 #| =================== tests =================== |#
 
@@ -38,6 +45,10 @@
 
   (check-exn exn:fail? (lambda () (assert #f)))
 
+  (check-equal? (enumerate '(1 2 3)) '((0 . 1) (1 . 2) (2 . 3)))
+
+  (check-equal? (list-ref (enumerate '(1 2 3 4 5) 1) 2) '(3 . 3))
+  
   (define elapsed-time (- (current-inexact-milliseconds) start-time))
   (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))
   
