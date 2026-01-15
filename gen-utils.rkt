@@ -3,7 +3,7 @@
 (provide pipe
          compose-pipe)
 
-;; pipeline macro named pipe (not currently used here but move to general lib)
+;; pipeline macro
 (define-syntax pipe
   (syntax-rules ()
     [(_ x) x]

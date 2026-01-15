@@ -114,14 +114,14 @@
 ;; head of data frame
 (define (dataframe-head df n)
   (dataframe
-  (for/hash ([(k v) (in-hash (dataframe-hash df))])
-    (values k (take v n)))))
+   (for/hash ([(k v) (in-hash (dataframe-hash df))])
+     (values k (take v n)))))
 
 ;; tail of data frame
 (define (dataframe-tail df n)
   (dataframe
-  (for/hash ([(k v) (in-hash (dataframe-hash df))])
-    (values k (take-right v n)))))
+   (for/hash ([(k v) (in-hash (dataframe-hash df))])
+     (values k (take-right v n)))))
 
 ;; read from csv (make more general!)
 (define dataframe-from-csv (compose-pipe
