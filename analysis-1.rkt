@@ -57,6 +57,7 @@
 
 |#
 
+#|
 
 ;; rolling function
 (define (rolling fn n ls)
@@ -68,6 +69,8 @@
 (define (sum win) (apply + win))
 (define (maximum win) (apply max win))
 (define (minimum win) (apply min win))
+
+
 
 ;; Usage
 (define data '(1 2 3 4 5 6 7 8 9 10))
@@ -81,10 +84,31 @@
 
 (define win-length 5)
 
-(for/list ([value (dataframe-ref df "close")] [idx (in-naturals)])
-  (if (< idx (- win-length 1))
-      (list idx "")
-  (list idx value)))
+;;(for/list ([value (dataframe-ref df "close")] [idx (in-naturals)])
+;;  (if (< idx (- win-length 1))
+;;      (list idx "")
+;;  (list idx value)))
+
+|#
+
+;; ............ make so has leading "" or whatever so can append safely
+
+;; Simplest possible immutable rolling function
+(define (rolling fn n ls)
+  (for/list ([i (in-range (- (length ls) n -1))])
+    (fn (take (drop ls i) n))))
+
+;; Example: mean function
+(define (mean window)
+  (/ (apply + window) (length window)))
+
+;; Usage
+(rolling mean 3 '(1 2 3 4 5 6))
+;; => (2 3 4 5)
+
+(rolling (lambda (w) (apply + w)) 3 '(1 2 3 4 5 6))
+;; => (6 9 12)
+
 
 
 #| =================== tests =================== |#
