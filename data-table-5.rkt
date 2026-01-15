@@ -1,6 +1,7 @@
 #lang racket
 
-(require rackunit)
+(require rackunit
+         syntax/location)
 
 (provide dataframe
          dataframe-ref
@@ -70,15 +71,16 @@
   (define row-length (length (dataframe-ref df first-key)))
   (list row-length col-length))
 
-#| =================== testing =================== |#
+#| =================== tests =================== |#
 
 (module+ test
 
-  (define module-name
-    (file-name-from-path (variable-reference->module-source (#%variable-reference))))
+  ;;(define module-name
+  ;;  (file-name-from-path (variable-reference->module-source (#%variable-reference))))
 
+  (define module-name (path->string (syntax-source-file-name #'here)))
   (printf "testing: ~a\n" module-name)
-
+  
   (define df1 (dataframe (hash 'a '(1 2 3) 'b '(4 5 6))))
   (check-equal? (dataframe-ref df1 'a) '(1 2 3))
   (check-equal? (dataframe-ref df1 'missing-key 'na) 'na)
