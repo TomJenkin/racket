@@ -4,7 +4,8 @@
          syntax/location)
 
 (provide pipe
-         compose-pipe)
+         compose-pipe
+         assert)
 
 #| =================== public =================== |#
 
@@ -18,6 +19,11 @@
 (define (compose-pipe . fs)
   (apply compose (reverse fs)))
 
+;; assert condition
+(define (assert condition [msg "assertion failed"])
+  (unless condition
+    (error 'assert msg)))
+
 #| =================== tests =================== |#
 
 (module+ test
@@ -29,7 +35,9 @@
   (check-equal? (pipe '(1 2 3 4 5) cdr cdr car) 3)
 
   (check-equal? ((compose-pipe cdr cdr car) '(1 2 3 4 5)) 3)
-  
+
+  (check-exn exn:fail? (lambda () (assert #f)))
+
   (define elapsed-time (- (current-inexact-milliseconds) start-time))
   (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))
   
