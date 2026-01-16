@@ -10,7 +10,15 @@
 
 (define file-path "C:/Users/tomje/Downloads/")
 (define file-name "SP500.csv")
-(define df (dataframe-from-csv (string-append file-path file-name)))
+(define df0 (dataframe-from-csv (string-append file-path file-name)))
+(define closes (dataframe-ref df0 "close"))
+(define df1 (dataframe-set df0 "mean-close" (rolling mean 5 closes)))
+(define df2 (dataframe-set df1 "std-close" (rolling std-dev 5 closes)))
+(define df3 (dataframe-set df2 "var-close" (rolling var 5 closes)))
+(dataframe-print df3 10 #f) ; head #t
+(define df4 (dataframe-dropna df3))
+
+;; !!! sort out date in tail...... 90/10/2026
 
 (parameterize
     ([plot-x-ticks (date-ticks)]
@@ -20,24 +28,14 @@
    (lines
     (map vector
          ;;(map date->seconds (hash-ref df "date"))
-         (map datetime->real (dataframe-ref df "date"))
-         (dataframe-ref df "close")))
+         (map datetime->real (dataframe-ref df0 "date"))
+         (dataframe-ref df0 "close")))
    #:x-label "Date"
    #:y-label "Value"
    #:aspect-ratio #f
    #:out-file (string-append file-path "test.png")
    #:title (string-append "Market: " file-name)))
 
-;; extend moving average example
-(define ls1 (dataframe-ref df "close"))
-;;(define ls2 (rolling mean 5 ls1))
-(define df1 (dataframe-set df "mean-close" (rolling mean 5 ls1)))
-(define df2 (dataframe-set df1 "std-close" (rolling std-dev 5 ls1)))
-(define df3 (dataframe-set df2 "var-close" (rolling var 5 ls1)))
-(define df4 (dataframe-dropna df3))
-(dataframe-shape df1)
-(dataframe-shape df3)
-(dataframe-print df3 10)
 
 #| =================== tests =================== |#
 

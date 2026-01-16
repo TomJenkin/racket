@@ -18,7 +18,11 @@
          dataframe-head
          dataframe-tail
          dataframe-dropna
-         dataframe-print)
+         dataframe-print
+
+         ;;string->date-iso
+
+         )
 
 #| =================== private =================== |#
 
@@ -63,10 +67,16 @@
 (define (dt-create data)
   (dataframe (make-immutable-hash (map (lambda (lst) (cons (car lst) (cdr lst))) data))))
 
-;; convert from string to date
+;; convert from string to date (assumes str is: yyyy-mm-dd)
 (define (string->date-iso str)
   (apply (lambda (y m d) (date 0 0 0 d m y 0 0 #f 0))
          (map string->number (string-split str "-"))))
+
+;; convert from string to date
+;; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! fix this !!!!!!!!!!!!!!!!!!!!!!!!!
+(define (string->date-dd/mm/yyyy str)
+  (apply (lambda (d m y) (date 0 0 0 d m y 0 0 #f 0))
+         (map string->number (string-split str "/"))))
 
 ;; print formatter
 (define (print-formatter e)
@@ -99,9 +109,6 @@
    rows))
 
 #| =================== public =================== |#
-
-;; change hash to hashtable or something similar
-
 
 ;; dataframe structure
 (struct dataframe (data)
@@ -167,14 +174,14 @@
   (dataframe (make-immutable-hash (map cons ks vs))))
 
 ;; pretty print
-(define (dataframe-print df n)
+(define (dataframe-print df n [head #t])
   (define h1 (hash-keys (dataframe-data df)))
   (define v1 (transpose (hash-values (dataframe-data df))))
   (define v2 (map (lambda (ls) (map print-formatter ls)) v1))
-  (define r1 (cons h1 v2))
-  (define r2 (take r1 n))
+  (define v3 (if head (take v2 n) (take-right v2 n)))
+  (define r1 (cons h1 v3))
   (displayln (make-string 50 #\=))
-  (print-table r2)
+  (print-table r1)
   (displayln (make-string 50 #\=)))
 
 ;; read from csv (make more general!)
@@ -185,7 +192,9 @@
                             dt-create
                             (lambda (df) (dataframe-rename df (hash "SP500" "close" "observation_date" "date")))
                             (lambda (df) (dataframe-retype df string->number (list "close")))
-                            (lambda (df) (dataframe-retype df string->date-iso (list "date")))))
+                            (lambda (df) (dataframe-retype df string->date-iso (list "date")))
+                            ;;(lambda (df) (dataframe-retype df string->date-dd/mm/yyyy (list "date")))
+                            ))
 
 #| =================== tests =================== |#
 
@@ -225,7 +234,7 @@
   (check-equal? (dataframe-shape df8) '(3 2))
 
   (check-equal? (dataframe-dropna (dataframe (hash 'a '(1 2 3) 'b '(4 "" 6))))
-              (dataframe '#hash((a . (1 3)) (b . (4 6)))))
+                (dataframe '#hash((a . (1 3)) (b . (4 6)))))
   
   (define elapsed-time (- (current-inexact-milliseconds) start-time))
   (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))
