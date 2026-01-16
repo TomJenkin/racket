@@ -101,10 +101,10 @@
 ;;  general rolling function (takes: mean, std, etc.)
 (define (rolling fn n ls)
   (for/list ([i (in-range (length ls))])
-    (if (< i (- n 1))
+    (if (< i (sub1 n))
         ""
-        ;;(take (list-tail ls (- i (- n 1))) n)
-        (fn (take (list-tail ls (- i (- n 1))) n))
+        ;;(take (list-tail ls (- i (sub1 n))) n)
+        (fn (take (list-tail ls (- i (sub1 n))) n))
         )))
     
 ;; Example: mean function
