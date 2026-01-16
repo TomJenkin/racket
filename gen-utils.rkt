@@ -14,7 +14,8 @@
          std-dev
          std-dev-sample
          var
-         var-sample)
+         var-sample
+         transpose)
 
 #| =================== private =================== |#
 
@@ -43,6 +44,10 @@
   (for/list ([value ls]
              [ix (in-naturals start)])
     (cons ix value)))
+
+;; transpose list of lists
+(define (transpose dt)
+  (apply map list dt))
 
 ;; slice
 (define (slice ls n m)
@@ -113,6 +118,8 @@
   (check-= (var '(0 1 2 3 4 5)) (var-test '(0 1 2 3 4 5)) 1e-10)
 
   (check-equal? (rolling sum 3 '(0 1 2 3 4 5)) '("" "" 3 6 9 12))
+
+  (check-equal? (transpose '((1 2 3) (4 5 6))) '((1 4) (2 5) (3 6)))
  
   (define elapsed-time (- (current-inexact-milliseconds) start-time))
   (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))

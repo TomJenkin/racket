@@ -5,7 +5,7 @@
          syntax/location
          "gen-utils.rkt")
 
-(provide dataframe
+(provide (struct-out dataframe)
          dataframe-ref
          dataframe-set
          dataframe-remove
@@ -16,7 +16,8 @@
          dataframe-retype
          dataframe-from-csv
          dataframe-head
-         dataframe-tail)
+         dataframe-tail
+         dataframe-dropna)
 
 #| =================== private =================== |#
 
@@ -67,6 +68,9 @@
          (map string->number (string-split str "-"))))
 
 #| =================== public =================== |#
+
+;; change hash to hashtable or something similar
+
 
 ;; dataframe structure
 (struct dataframe (hash)
@@ -123,6 +127,14 @@
    (for/hash ([(k v) (in-hash (dataframe-hash df))])
      (values k (take-right v n)))))
 
+;; dropna (where na is: "")
+(define (dataframe-dropna df)
+  (define (remove-sublists-with-empty-string ls)
+    (filter (lambda (subls) (not (member "" subls))) ls))
+  (define ks (hash-keys (dataframe-hash df)))
+  (define vs (transpose (remove-sublists-with-empty-string (transpose (hash-values (dataframe-hash df))))))
+  (dataframe (make-immutable-hash (map cons ks vs))))
+
 ;; read from csv (make more general!)
 (define dataframe-from-csv (compose-pipe
                             read-csv
@@ -169,6 +181,9 @@
 
   (define df8 (dataframe-tail df6 3))
   (check-equal? (dataframe-shape df8) '(3 2))
+
+  (check-equal? (dataframe-dropna (dataframe (hash 'a '(1 2 3) 'b '(4 "" 6))))
+              (dataframe '#hash((a . (1 3)) (b . (4 6)))))
   
   (define elapsed-time (- (current-inexact-milliseconds) start-time))
   (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))

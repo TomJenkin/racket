@@ -3,6 +3,7 @@
 (require plot
          rackunit
          syntax/location
+         "data-table-5.rkt"
          "gen-utils.rkt"
          "data-table-5.rkt")
 
@@ -15,7 +16,7 @@
 
 ;;(dataframe-head df 5)
 
-(dataframe-shape df)
+;;(dataframe-shape df)
 
 (parameterize
     ([plot-x-ticks (date-ticks)]
@@ -34,21 +35,36 @@
    #:title (string-append "Market: " file-name)))
 
 (define ls1 (dataframe-ref df "close"))
-
 (define ls2 (rolling mean 3 ls1))
-
 (define df1 (dataframe-set df "ma" ls2))
+;;(dataframe-head df1 5)
 
-(dataframe-head df1 5)
+(define df2 (dataframe-dropna df1))
+;;(dataframe-head df2 5)
+;;(dataframe-shape df1)
+;;(dataframe-shape df2)
 
-#|
-(define aa '(0 1 2 3 4 5 6 7 8 9))
-(rolling sum 3 aa)
-(rolling mean 3 aa)
-(rolling std-dev 3 aa)
-(rolling var 3 aa)
-|#
+(displayln "==================================================")
 
+(define (dataframe-print df n)
+  (define rows (cons
+                (hash-keys (dataframe-hash df))
+                (transpose (hash-values (dataframe-hash (dataframe-head df n))))))
+
+
+  (for ([row rows] [i (in-naturals)])
+    (if (= i 0)
+        ;; Header row - maybe print differently
+        (begin
+          (display "H: ")
+          (displayln row))
+        ;; Data rows
+        (printf "~a: ~a\n" i row)))
+  
+  (displayln "done")
+  )
+
+(dataframe-print df2 5)
 
 #| =================== tests =================== |#
 
