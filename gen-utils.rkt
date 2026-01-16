@@ -23,6 +23,11 @@
 ;; square
 (define (square x) (* x x))
 
+;; pad-left
+(define (pad-left n width)
+  (define s (number->string n))
+  (string-append (make-string (max 0 (- width (string-length s))) #\0) s))
+
 #| =================== public =================== |#
 
 ;; pipeline macro
@@ -95,10 +100,10 @@
 
 ;; date to string
 (define (date->dd/mm/yyyy d)
-  (format "~a/~a/~a"
-          (~a (date-day d)   #:min-width 2 #:pad-string "0")
-          (~a (date-month d) #:min-width 2 #:pad-string "0")
-          (~a (date-year d)  #:min-width 4 #:pad-string "0")))
+  (string-append
+   (pad-left (date-day d) 2) "/"
+   (pad-left (date-month d) 2) "/"
+   (number->string (date-year d))))
 
 #| =================== tests =================== |#
 
@@ -130,7 +135,7 @@
   (check-equal? (transpose '((1 2 3) (4 5 6))) '((1 4) (2 5) (3 6)))
 
   (define d1 (date 0 0 0 14 1 2016 0 0 #f 0))
-  (check-equal? (date->dd/mm/yyyy d1) "14/10/2016")
+  (check-equal? (date->dd/mm/yyyy d1) "14/01/2016")
  
   (define elapsed-time (- (current-inexact-milliseconds) start-time))
   (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))

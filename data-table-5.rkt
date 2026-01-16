@@ -174,7 +174,7 @@
   (dataframe (make-immutable-hash (map cons ks vs))))
 
 ;; pretty print
-(define (dataframe-print df n [head #t])
+(define (dataframe-print df n #:head [head #t])
   (define h1 (hash-keys (dataframe-data df)))
   (define v1 (transpose (hash-values (dataframe-data df))))
   (define v2 (map (lambda (ls) (map print-formatter ls)) v1))

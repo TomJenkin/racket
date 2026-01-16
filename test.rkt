@@ -1,11 +1,8 @@
 #lang racket
 
-(require "data-table-5.rkt")
+(require "gen-utils.rkt")
 
-(define aa "09/01/2026")
+(define cc (date 0 0 0 9 1 2026 0 0 #f 0))
 
-;;(define aa "20260109")
+(date->dd/mm/yyyy cc)
 
-;;(define bb (string->date-iso "2026-01-09"))
-
-aa
