@@ -30,12 +30,14 @@
 
 ;; extend moving average example
 (define ls1 (dataframe-ref df "close"))
-(define ls2 (rolling mean 5 ls1))
-(define df1 (dataframe-set df "mean-close" ls2))
-(define df2 (dataframe-dropna df1))
+;;(define ls2 (rolling mean 5 ls1))
+(define df1 (dataframe-set df "mean-close" (rolling mean 5 ls1)))
+(define df2 (dataframe-set df1 "std-close" (rolling std-dev 5 ls1)))
+(define df3 (dataframe-set df2 "var-close" (rolling var 5 ls1)))
+(define df4 (dataframe-dropna df3))
 (dataframe-shape df1)
-(dataframe-shape df2)
-(dataframe-print df1 10)
+(dataframe-shape df3)
+(dataframe-print df3 10)
 
 #| =================== tests =================== |#
 
