@@ -104,72 +104,72 @@
 
 
 ;; dataframe structure
-(struct dataframe (hash)
+(struct dataframe (data)
   #:transparent
   #:guard dataframe-guard)
 
 ;; immutable ref
 (define (dataframe-ref df key [default #f])
-  (hash-ref (dataframe-hash df) key default))
+  (hash-ref (dataframe-data df) key default))
 
 ;; immutable set
 (define (dataframe-set df key value)
-  (dataframe (hash-set (dataframe-hash df) key value)))
+  (dataframe (hash-set (dataframe-data df) key value)))
 
 ;; immutable remove
 (define (dataframe-remove df key)
-  (dataframe (hash-remove (dataframe-hash df) key)))
+  (dataframe (hash-remove (dataframe-data df) key)))
 
 ;; immutable update
 (define (dataframe-update df key updater)
-  (dataframe (hash-update (dataframe-hash df) key updater)))
+  (dataframe (hash-update (dataframe-data df) key updater)))
 
 ;; immutable has key
 (define (dataframe-has-key df key)
-  (hash-has-key? (dataframe-hash df) key))
+  (hash-has-key? (dataframe-data df) key))
 
 ;; rename keys
 (define (dataframe-rename df ns)
-  (dataframe (for/hash ([(k v) (in-hash (dataframe-hash df))])
+  (dataframe (for/hash ([(k v) (in-hash (dataframe-data df))])
                (values (hash-ref ns k k) v))))
 
 ;; change type
 (define (dataframe-retype dt fn ns)
   (dataframe 
-   (for/hash ([(k v) (in-hash (dataframe-hash dt))])
+   (for/hash ([(k v) (in-hash (dataframe-data dt))])
      (if (member k ns) (values k (map fn v)) (values k v)))))
 
 ;; shape
 (define (dataframe-shape df)
-  (define col-length (hash-count (dataframe-hash df)))
-  (define first-key (car (hash-keys (dataframe-hash df))))
+  (define col-length (hash-count (dataframe-data df)))
+  (define first-key (car (hash-keys (dataframe-data df))))
   (define row-length (length (dataframe-ref df first-key)))
   (list row-length col-length))
 
 ;; head of data frame
 (define (dataframe-head df n)
   (dataframe
-   (for/hash ([(k v) (in-hash (dataframe-hash df))])
+   (for/hash ([(k v) (in-hash (dataframe-data df))])
      (values k (take v n)))))
 
 ;; tail of data frame
 (define (dataframe-tail df n)
   (dataframe
-   (for/hash ([(k v) (in-hash (dataframe-hash df))])
+   (for/hash ([(k v) (in-hash (dataframe-data df))])
      (values k (take-right v n)))))
 
 ;; dropna (where na is: "")
 (define (dataframe-dropna df)
   (define (remove-sublists-with-empty-string ls)
     (filter (lambda (subls) (not (member "" subls))) ls))
-  (define ks (hash-keys (dataframe-hash df)))
-  (define vs (transpose (remove-sublists-with-empty-string (transpose (hash-values (dataframe-hash df))))))
+  (define ks (hash-keys (dataframe-data df)))
+  (define vs (transpose (remove-sublists-with-empty-string (transpose (hash-values (dataframe-data df))))))
   (dataframe (make-immutable-hash (map cons ks vs))))
 
 ;; pretty print
 (define (dataframe-print df n)
-  (define h1 (hash-keys (dataframe-hash df)))
-  (define v1 (transpose (hash-values (dataframe-hash df))))
+  (define h1 (hash-keys (dataframe-data df)))
+  (define v1 (transpose (hash-values (dataframe-data df))))
   (define v2 (map (lambda (ls) (map print-formatter ls)) v1))
   (define r1 (cons h1 v2))
   (define r2 (take r1 n))
