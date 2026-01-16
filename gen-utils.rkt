@@ -6,7 +6,20 @@
 (provide pipe
          compose-pipe
          assert
-         enumerate)
+         enumerate
+         slice
+         rolling
+         sum
+         mean
+         std-dev
+         std-dev-sample
+         var
+         var-sample)
+
+#| =================== private =================== |#
+
+;; square
+(define (square x) (* x x))
 
 #| =================== public =================== |#
 
@@ -31,6 +44,49 @@
              [ix (in-naturals start)])
     (cons ix value)))
 
+;; slice
+(define (slice ls n m)
+  (take (list-tail ls n) (- m n)))
+
+;; rolling stats (e.g. rolling mean, std, etc.)
+(define (rolling fn n ls)
+  (for/list ([i (in-range (length ls))])
+    (if (< i (sub1 n)) "" (fn (take (list-tail ls (- i (sub1 n))) n)))))
+
+;; sum
+(define (sum ls)
+  (apply + ls))
+
+;; mean
+(define (mean ls)
+  (/ (apply + ls) (length ls)))
+
+;; stdev
+(define (std-dev ls)
+  (let ([μ (mean ls)]
+        [n (length ls)])
+    (sqrt (/ (apply + (map (λ (x) (square (- x μ))) ls)) n))))
+
+;; std (sample version)
+(define (std-dev-sample ls)
+  (let ([μ (mean ls)]
+        [n (length ls)])
+    (sqrt (/ (apply + (map (λ (x) (square (- x μ))) ls)) (sub1 n)))))
+
+;; variance
+(define (var ls)
+  (let* ([μ (mean ls)]
+         [n (length ls)]
+         [sum-sq-diff (apply + (map (λ (x) (expt (- x μ) 2)) ls))])
+    (/ sum-sq-diff n)))  ; population variance
+
+;; variance sample
+(define (var-sample ls)
+  (let* ([μ (mean ls)]
+         [n (length ls)]
+         [sum-sq-diff (apply + (map (λ (x) (expt (- x μ) 2)) ls))])
+    (/ sum-sq-diff (sub1 n))))  ; sample variance (unbiased)
+
 #| =================== tests =================== |#
 
 (module+ test
@@ -48,7 +104,16 @@
   (check-equal? (enumerate '(1 2 3)) '((0 . 1) (1 . 2) (2 . 3)))
 
   (check-equal? (list-ref (enumerate '(1 2 3 4 5) 1) 2) '(3 . 3))
-  
+
+  (check-equal? (slice '(0 1 2 3 4 5) 0 3) '(0 1 2))
+
+  (check-equal? (rolling mean 3 '(0 1 2 3 4 5)) '("" "" 1 2 3 4))
+
+  (define (var-test ls) (square (std-dev ls)))
+  (check-= (var '(0 1 2 3 4 5)) (var-test '(0 1 2 3 4 5)) 1e-10)
+
+  (check-equal? (rolling sum 3 '(0 1 2 3 4 5)) '("" "" 3 6 9 12))
+ 
   (define elapsed-time (- (current-inexact-milliseconds) start-time))
   (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))
   

@@ -33,91 +33,21 @@
    #:out-file (string-append file-path "test.png")
    #:title (string-append "Market: " file-name)))
 
-#|
+(define ls1 (dataframe-ref df "close"))
 
-(define (rolling f n lst [step 1])
-  (if (< (length lst) n)
-      '()
-      (for/list ([i (in-range 0 (- (length lst) n -1) step)])
-        (f (take (drop lst i) n)))))
+(define ls2 (rolling mean 3 ls1))
 
-(define aa (rolling (lambda (ls) (apply + ls)) 5 (dataframe-ref df "close")))
+(define df1 (dataframe-set df "ma" ls2))
 
-(length aa)
-
-(define win-length 5)
-
-;;(define (fn ls) (apply + ls))
-(define (fn ls) (apply + ls))
-
-(for/list ([value (dataframe-ref df "close")] [idx (in-naturals)])
-  (if (< idx (- win-length 1))
-      (list idx "")
-  (list idx value)))
-
-|#
+(dataframe-head df1 5)
 
 #|
-
-;; rolling function
-(define (rolling fn n ls)
-  (for/list ([i (in-range (- (length ls) n -1))])
-    (fn (take (drop ls i) n))))
-
-;; Statistic functions to pass in
-(define (mean win) (/ (apply + win) (length win)))
-(define (sum win) (apply + win))
-(define (maximum win) (apply max win))
-(define (minimum win) (apply min win))
-
-
-
-;; Usage
-(define data '(1 2 3 4 5 6 7 8 9 10))
-
-(rolling mean 3 data)     ;; => (2 3 4 5 6 7 8 9)
-(rolling sum 3 data)      ;; => (6 9 12 15 18 21 24 27)
-(rolling maximum 3 data)  ;; => (3 4 5 6 7 8 9 10)
-
-;;(for/list ([value (dataframe-ref df "close")] [idx (in-naturals)])
-;;  (list idx value))
-
-(define win-length 5)
-
-;;(for/list ([value (dataframe-ref df "close")] [idx (in-naturals)])
-;;  (if (< idx (- win-length 1))
-;;      (list idx "")
-;;  (list idx value)))
-
-|#
-
-;; ............ make so has leading "" or whatever so can append safely
-
-(define (slice ls n m)
-  (take (list-tail ls n) (- m n)))
-
 (define aa '(0 1 2 3 4 5 6 7 8 9))
-
-;;  general rolling function (takes: mean, std, etc.)
-(define (rolling fn n ls)
-  (for/list ([i (in-range (length ls))])
-    (if (< i (sub1 n))
-        ""
-        ;;(take (list-tail ls (- i (sub1 n))) n)
-        (fn (take (list-tail ls (- i (sub1 n))) n))
-        )))
-    
-;; Example: mean function
-(define (mean window) (/ (apply + window) (length window)))
-
-;; Usage
-(rolling mean 3 '(1 2 3 4 5 6))
-;; => (2 3 4 5)
-
-(rolling (lambda (w) (apply + w)) 3 '(1 2 3 4 5 6))
-;; => (6 9 12)
-
+(rolling sum 3 aa)
 (rolling mean 3 aa)
+(rolling std-dev 3 aa)
+(rolling var 3 aa)
+|#
 
 
 #| =================== tests =================== |#
