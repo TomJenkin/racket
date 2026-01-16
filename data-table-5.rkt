@@ -180,9 +180,10 @@
   (define v2 (map (lambda (ls) (map print-formatter ls)) v1))
   (define v3 (if head (take v2 n) (take-right v2 n)))
   (define r1 (cons h1 v3))
-  (displayln (make-string 50 #\=))
+  (define nn 60)
+  (displayln (make-string nn #\=))
   (print-table r1)
-  (displayln (make-string 50 #\=)))
+  (displayln (make-string nn #\=)))
 
 ;; read from csv (make more general!)
 (define dataframe-from-csv (compose-pipe

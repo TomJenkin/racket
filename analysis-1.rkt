@@ -11,13 +11,14 @@
 (define file-path "C:/Users/tomje/Downloads/")
 (define file-name "SP500.csv")
 (define df0 (dataframe-from-csv (string-append file-path file-name)))
-;;(dataframe-tail df0 10)
 (define closes (dataframe-ref df0 "close"))
 (define df1 (dataframe-set df0 "mean-close" (rolling mean 5 closes)))
 (define df2 (dataframe-set df1 "std-close" (rolling std-dev 5 closes)))
 (define df3 (dataframe-set df2 "var-close" (rolling var 5 closes)))
 (dataframe-print df3 10 #:head #t)
 (define df4 (dataframe-dropna df3))
+
+;; create a generalised plot function that can be extended to multiple lines!!!!
 
 (parameterize
     ([plot-x-ticks (date-ticks)]
