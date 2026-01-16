@@ -94,13 +94,32 @@
 ;; ............ make so has leading "" or whatever so can append safely
 
 ;; Simplest possible immutable rolling function
-(define (rolling fn n ls)
+(define (rolling-old1 fn n ls)
   (for/list ([i (in-range (- (length ls) n -1))])
     (fn (take (drop ls i) n))))
 
+
+(define (rolling-old2 fn n ls)
+  (for/list ([iv (enumerate ls 0)]
+             #:when (<= (+ (car iv) n) (length ls)))
+    (fn (take (drop ls (car iv)) n))))
+
+(define (rolling-old3 fn n ls)
+  (define len (length ls))
+  (for/list ([iv (enumerate ls 0)])
+    (define i (car iv))
+    (if (<= (+ i n) len)
+        (fn (take (drop ls i) n))
+        "")))
+
+(define (rolling fn n ls)
+  (for/list ([iv (enumerate ls 0)])
+    (define i (car iv))
+    (define start (- i (sub1 n))) ; i-(n-1)
+    (if (negative? start) "" (fn (take (drop ls start) n)))))
+
 ;; Example: mean function
-(define (mean window)
-  (/ (apply + window) (length window)))
+(define (mean window) (/ (apply + window) (length window)))
 
 ;; Usage
 (rolling mean 3 '(1 2 3 4 5 6))
