@@ -15,7 +15,8 @@
          std-dev-sample
          var
          var-sample
-         transpose)
+         transpose
+         date->dd/mm/yyyy)
 
 #| =================== private =================== |#
 
@@ -92,6 +93,13 @@
          [sum-sq-diff (apply + (map (λ (x) (expt (- x μ) 2)) ls))])
     (/ sum-sq-diff (sub1 n))))  ; sample variance (unbiased)
 
+;; date to string
+(define (date->dd/mm/yyyy d)
+  (format "~a/~a/~a"
+          (~a (date-day d)   #:min-width 2 #:pad-string "0")
+          (~a (date-month d) #:min-width 2 #:pad-string "0")
+          (~a (date-year d)  #:min-width 4 #:pad-string "0")))
+
 #| =================== tests =================== |#
 
 (module+ test
@@ -120,6 +128,9 @@
   (check-equal? (rolling sum 3 '(0 1 2 3 4 5)) '("" "" 3 6 9 12))
 
   (check-equal? (transpose '((1 2 3) (4 5 6))) '((1 4) (2 5) (3 6)))
+
+  (define d1 (date 0 0 0 14 1 2016 0 0 #f 0))
+  (check-equal? (date->dd/mm/yyyy d1) "14/10/2016")
  
   (define elapsed-time (- (current-inexact-milliseconds) start-time))
   (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))

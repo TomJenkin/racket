@@ -17,7 +17,8 @@
          dataframe-from-csv
          dataframe-head
          dataframe-tail
-         dataframe-dropna)
+         dataframe-dropna
+         dataframe-print)
 
 #| =================== private =================== |#
 
@@ -66,6 +67,36 @@
 (define (string->date-iso str)
   (apply (lambda (y m d) (date 0 0 0 d m y 0 0 #f 0))
          (map string->number (string-split str "-"))))
+
+;; print formatter
+(define (print-formatter e)
+  (cond
+    [(date? e) (date->dd/mm/yyyy e)]
+    [(number? e) (real->decimal-string e 2)]
+    [(string? e) (if (string=? e "") "NA" e)]
+    [else e]))
+
+;; print table rows
+(define (print-table rows)
+
+  (define (pad-right s w)
+    (define n (- w (string-length s)))
+    (if (<= n 0)
+        s
+        (string-append s (make-string n #\space))))
+
+  (define widths
+    (apply map
+           (lambda col (apply max (map string-length col)))
+           rows))
+  
+  (for-each
+   (lambda (row)
+     (for ([cell row] [w widths])
+       (display (pad-right cell w))
+       (display "  "))
+     (newline))
+   rows))
 
 #| =================== public =================== |#
 
@@ -134,6 +165,17 @@
   (define ks (hash-keys (dataframe-hash df)))
   (define vs (transpose (remove-sublists-with-empty-string (transpose (hash-values (dataframe-hash df))))))
   (dataframe (make-immutable-hash (map cons ks vs))))
+
+;; pretty print
+(define (dataframe-print df n)
+  (define h1 (hash-keys (dataframe-hash df)))
+  (define v1 (transpose (hash-values (dataframe-hash df))))
+  (define v2 (map (lambda (ls) (map print-formatter ls)) v1))
+  (define r1 (cons h1 v2))
+  (define r2 (take r1 n))
+  (displayln (make-string 50 #\=))
+  (print-table r2)
+  (displayln (make-string 50 #\=)))
 
 ;; read from csv (make more general!)
 (define dataframe-from-csv (compose-pipe
