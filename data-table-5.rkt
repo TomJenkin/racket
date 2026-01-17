@@ -60,12 +60,13 @@
   (filter (lambda (ls) (not (member "" ls))) dt))
 
 ;; transpose list of lists
-(define (dt-transpose dt)
-  (apply map list dt))
+;;(define (dt-transpose dt)
+;;  (apply map list dt))
 
 ;; creates table as hash from list of lists
 (define (dt-create data)
-  (dataframe (make-immutable-hash (map (lambda (lst) (cons (car lst) (cdr lst))) data))))
+  ;; e.g. data like: '(("date" "2025-01-02" "2025-01-03" "2025-01-04") ("close" 55 56 43))
+  (dataframe (make-immutable-hash (map (lambda (ls) (cons (car ls) (cdr ls))) data))))
 
 ;; convert from string to date (assumes str is: yyyy-mm-dd)
 (define (string->date-iso str)
@@ -189,13 +190,92 @@
 (define dataframe-from-csv (compose-pipe
                             read-csv
                             dt-clean
-                            dt-transpose
+                            ;;dt-transpose
+                            transpose
                             dt-create
                             (lambda (df) (dataframe-rename df (hash "SP500" "close" "observation_date" "date")))
                             (lambda (df) (dataframe-retype df string->number (list "close")))
                             (lambda (df) (dataframe-retype df string->date-iso (list "date")))
                             ;;(lambda (df) (dataframe-retype df string->date-dd/mm/yyyy (list "date")))
                             ))
+
+
+#|
+(define file-name "C:/Users/tomje/Downloads/SP500.csv")
+;;(define df1 (dataframe-from-csv file-name))
+(define df1 (read-csv file-name))
+(define df2 (dt-clean df1))
+(define df3 (transpose df2))
+(define df4 (dt-create df3))
+(dataframe-print df4 10 #:head #t)
+;;df3
+|#
+
+#|
+(take df2 5)
+
+(take (first df3) 5)
+(take (second df3) 5)
+
+(define df4 (dt-create df3))
+
+(dataframe-print df4 10 #:head #t)
+
+;; this is the bad one
+(define df5 (dataframe-rename df4 (hash "SP500" "close" "observation_date" "date")))
+
+(dataframe-print df5 10 #:head #t)
+
+;; df4 is good...
+
+(define df6 (dataframe-head df4 5))
+
+(dataframe-print df6 4 #:head #t)
+
+;;(define ns (hash "SP500" "close" "observation_date" "date"))
+
+(define ns (hash "observation_date" "date" "SP500" "close"))
+|#
+
+#|
+(define (dataframe-rename-2 df ns)
+  (define ks (hash-keys (dataframe-data df)))
+  (define ks-new (map (lambda (k) (hash-ref ns k k)) ks))
+  (define vs (transpose (hash-values (dataframe-data df))))
+  (define vss (cons ks-new vs))
+  (define vss2 (take vss 5))
+  (define vsss (transpose vss2))
+  (define aa (dt-create vsss))
+;;(define bb (dataframe-head aa 3))
+  ;;(take vss 5)
+  (hash-keys (dataframe-data aa))
+  ;;(hash-values (dataframe-data aa))
+  )
+
+(define ns (hash "observation_date" "date" "SP500" "close"))
+
+;;(dataframe-rename-2 df4 ns)
+
+(define h #hash(("date" . (1 1 1 1)) ("close" . (2 3 5 8))))
+
+(hash-keys h)
+(hash-values h)
+h
+|#
+
+#|
+;; creates table as hash from list of lists
+(define (dt-create-2 data)
+  (dataframe (make-immutable-hash (map (lambda (ls) (cons (car ls) (cdr ls))) data))))
+
+(dataframe-rename-2 df4 ns)
+
+
+;;(for/hash ([(k v) (in-hash (dataframe-data df6))])
+;;               (values (hash-ref ns k k) v))
+
+|#
+
 
 #| =================== tests =================== |#
 

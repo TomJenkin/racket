@@ -8,6 +8,7 @@
 
 #| =================== plots =================== |#
 
+#| keep!
 (define file-path "C:/Users/tomje/Downloads/")
 (define file-name "SP500.csv")
 (define df0 (dataframe-from-csv (string-append file-path file-name)))
@@ -17,6 +18,22 @@
 (define df3 (dataframe-set df2 "var-close" (rolling var 5 closes)))
 (dataframe-print df3 10 #:head #t)
 (define df4 (dataframe-dropna df3))
+)
+|#
+
+(define file-path "C:/Users/tomje/Downloads/")
+(define file-name "SP500.csv")
+
+(define df
+  (pipe (dataframe-from-csv (string-append file-path file-name))
+        ;;(lambda (df) (dataframe-set df "mean-close" (rolling mean 5 (dataframe-ref df "close"))))
+        ;;(lambda (df) (dataframe-set df "std-close" (rolling std-dev 5 (dataframe-ref df "close"))))
+        ;;(lambda (df) (dataframe-set df "var-close" (rolling var 5 (dataframe-ref df "close"))))
+        ;;(lambda (df) (dataframe-dropna df))
+        ;;(lambda (df) (dataframe-print df 10 #:head #t))
+        ))
+
+(dataframe-print df 10 #:head #t)
 
 ;; create a generalised plot function that can be extended to multiple lines!!!!
 
@@ -28,8 +45,8 @@
    (lines
     (map vector
          ;;(map date->seconds (hash-ref df "date"))
-         (map datetime->real (dataframe-ref df0 "date"))
-         (dataframe-ref df0 "close")))
+         (map datetime->real (dataframe-ref df "date"))
+         (dataframe-ref df "close")))
    #:x-label "Date"
    #:y-label "Value"
    #:aspect-ratio #f
