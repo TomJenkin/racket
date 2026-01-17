@@ -73,7 +73,7 @@
             [else (loop (rest hs) (add1 i))])))
   (map (lambda (row) (list-ref row idx)) (table-rows t)))
 
-;; add column
+;; table add column
 (define (table-add-col t name values)
   (define rs (table-rows t))
   (unless (= (length rs) (length values))
