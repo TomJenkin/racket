@@ -6,7 +6,7 @@
 
 (provide (struct-out table)
          read-csv
-         make-table
+         table-create
          table-shape
          table-col
          table-add-col
@@ -52,7 +52,7 @@
   (call-with-input-file file-name csv->list))
 
 ;; make-table
-(define (make-table headers rows)
+(define (table-create headers rows)
   (unless (and (list? headers) (andmap list? rows))
     (error 'make-table "headers must be a list and rows must be a list of lists"))
   (define w (length headers))
@@ -93,21 +93,21 @@
 
 ;; table head
 (define (table-head t n)
-  (make-table (table-headers t) (take (table-rows t) n)))
+  (table-create (table-headers t) (take (table-rows t) n)))
 
 ;; table tail
 (define (table-tail t n)
-  (make-table (table-headers t) (take-right (table-rows t) n)))
+  (table-create (table-headers t) (take-right (table-rows t) n)))
 
 ;; table rename
 (define (table-rename t ns)
   (define ks (map (lambda (k) (hash-ref ns k k)) (table-headers t)))
-  (make-table ks (table-rows t)))
+  (table-create ks (table-rows t)))
 
 ;; table dropna
 (define (table-dropna t)
   (define rs (filter (lambda (row) (not (member "" row))) (table-rows t)))
-  (make-table (table-headers t) rs))
+  (table-create (table-headers t) rs))
 
 #| =================== tests =================== |#
 
@@ -118,7 +118,7 @@
   (define start-time (current-inexact-milliseconds))
 
   (define t0
-    (make-table
+    (table-create
      '("date" "a" "b")
      '(("2025-12-15" 33.5 44.2) ("2025-12-16" 31.0 45.1) ("2025-12-17" 30.0 40.0))))
 
@@ -129,7 +129,7 @@
   
   (define file-name "C:/Users/tomje/Downloads/SP500.csv")
   (define data (read-csv file-name))
-  (define t1 (make-table (car data) (cdr data)))
+  (define t1 (table-create (car data) (cdr data)))
   (check-equal? (table-shape t1) '(2610 2))
   (check-equal? (table->list t1) data)
   (define ns (hash "observation_date" "date" "SP500" "close"))
