@@ -8,19 +8,6 @@
 
 #| =================== plots =================== |#
 
-#| keep!
-(define file-path "C:/Users/tomje/Downloads/")
-(define file-name "SP500.csv")
-(define df0 (dataframe-from-csv (string-append file-path file-name)))
-(define closes (dataframe-ref df0 "close"))
-(define df1 (dataframe-set df0 "mean-close" (rolling mean 5 closes)))
-(define df2 (dataframe-set df1 "std-close" (rolling std-dev 5 closes)))
-(define df3 (dataframe-set df2 "var-close" (rolling var 5 closes)))
-(dataframe-print df3 10 #:head #t)
-(define df4 (dataframe-dropna df3))
-)
-|#
-
 (define file-path "C:/Users/tomje/Downloads/")
 (define file-name "SP500.csv")
 
@@ -30,9 +17,9 @@
         (lambda (t) (table-dropna t))
         (lambda (t) (table-update t "close" string->number))
         (lambda (t) (table-update t "date" string->date-iso))
-        (lambda (t) (table-create t "mean-close" (rolling mean 5 (table-read t "close"))))
-        (lambda (t) (table-create t "std-close" (rolling std-dev 5 (table-read t "close"))))
-        (lambda (t) (table-create t "var-close" (rolling var 5 (table-read t "close"))))
+        (lambda (t) (table-create t "mean-close" (rolling mean 50 (table-read t "close"))))
+        (lambda (t) (table-create t "std-close" (rolling std-dev 50 (table-read t "close"))))
+        (lambda (t) (table-create t "var-close" (rolling var 50 (table-read t "close"))))
         (lambda (t) (table-dropna t))
         ))
 
@@ -40,6 +27,7 @@
 
 ;; create a generalised plot function that can be extended to multiple lines!!!!
 
+#|
 (parameterize
     ([plot-x-ticks (date-ticks)]
      [plot-width 600]
@@ -55,18 +43,46 @@
    #:aspect-ratio #f
    #:out-file (string-append file-path "test.png")
    #:title (string-append "Market: " file-name)))
+|#
 
+(parameterize
+    ([plot-x-ticks (date-ticks)]
+     [plot-width 600]
+     [plot-height 300])
+  (plot
+   (list
+    ;; first line: close
+    (lines
+     (map vector
+          (map datetime->real (table-read t1 "date"))
+          (table-read t1 "close"))
+     #:label "Close")
+
+    ;; second line: e.g. another column
+    (lines
+     (map vector
+          (map datetime->real (table-read t1 "date"))
+          (table-read t1 "mean-close"))
+     #:label "Mean")
+
+    (lines
+     (map vector
+          (map datetime->real (table-read t1 "date"))
+          (table-read t1 "std-close"))
+     #:label "STD")
+
+    )
+   #:x-label "Date"
+   #:y-label "Value"
+   #:aspect-ratio #f
+   #:out-file (string-append file-path "test.png")
+   #:title (string-append "Market: " file-name)))
 
 #| =================== tests =================== |#
 
 (module+ test
 
-  (define module-name (path->string (syntax-source-file-name #'here)))
-  (printf "testing: ~a\n" module-name)
-  (define start-time (current-inexact-milliseconds))
-
+  (timeit
+   (path->string (syntax-source-file-name #'here))
   
-  (define elapsed-time (- (current-inexact-milliseconds) start-time))
-  (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))
-  
-  )
+   ))

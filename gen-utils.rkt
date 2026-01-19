@@ -17,7 +17,8 @@
          var-sample
          transpose
          date->dd/mm/yyyy
-         string->date-iso)
+         string->date-iso
+         timeit)
 
 #| =================== private =================== |#
 
@@ -30,6 +31,26 @@
   (string-append (make-string (max 0 (- width (string-length s))) #\0) s))
 
 #| =================== public =================== |#
+
+#|
+(define-syntax-rule (timeit label expr ...)
+  (begin
+    (printf "~a: " label)
+    (flush-output)
+    (time (begin expr ...))))
+|#
+
+;; timeit
+(define-syntax-rule (timeit label expr ...)
+  (let ()
+    (printf "~a: " label)
+    (flush-output)
+    (define start-cpu (current-process-milliseconds))
+    (define start-real (current-inexact-milliseconds))
+    (begin expr ...)
+    (define cpu (- (current-process-milliseconds) start-cpu))
+    (define real (- (current-inexact-milliseconds) start-real))
+    (printf "CPU: ~a ms, Real: ~a ms\n" cpu (real->decimal-string real 2))))
 
 ;; pipeline macro
 (define-syntax pipe
@@ -115,35 +136,31 @@
 
 (module+ test
 
-  (define module-name (path->string (syntax-source-file-name #'here)))
-  (printf "testing: ~a\n" module-name)
-  (define start-time (current-inexact-milliseconds))
+  (timeit
+   (path->string (syntax-source-file-name #'here))
 
-  (check-equal? (pipe '(1 2 3 4 5) cdr cdr car) 3)
+   (check-equal? (pipe '(1 2 3 4 5) cdr cdr car) 3)
 
-  (check-equal? ((compose-pipe cdr cdr car) '(1 2 3 4 5)) 3)
+   (check-equal? ((compose-pipe cdr cdr car) '(1 2 3 4 5)) 3)
 
-  (check-exn exn:fail? (lambda () (assert #f)))
+   (check-exn exn:fail? (lambda () (assert #f)))
 
-  (check-equal? (enumerate '(1 2 3)) '((0 . 1) (1 . 2) (2 . 3)))
+   (check-equal? (enumerate '(1 2 3)) '((0 . 1) (1 . 2) (2 . 3)))
 
-  (check-equal? (list-ref (enumerate '(1 2 3 4 5) 1) 2) '(3 . 3))
+   (check-equal? (list-ref (enumerate '(1 2 3 4 5) 1) 2) '(3 . 3))
 
-  (check-equal? (slice '(0 1 2 3 4 5) 0 3) '(0 1 2))
+   (check-equal? (slice '(0 1 2 3 4 5) 0 3) '(0 1 2))
 
-  (check-equal? (rolling mean 3 '(0 1 2 3 4 5)) '("" "" 1 2 3 4))
+   (check-equal? (rolling mean 3 '(0 1 2 3 4 5)) '("" "" 1 2 3 4))
 
-  (define (var-test ls) (square (std-dev ls)))
-  (check-= (var '(0 1 2 3 4 5)) (var-test '(0 1 2 3 4 5)) 1e-10)
+   (define (var-test ls) (square (std-dev ls)))
+   (check-= (var '(0 1 2 3 4 5)) (var-test '(0 1 2 3 4 5)) 1e-10)
 
-  (check-equal? (rolling sum 3 '(0 1 2 3 4 5)) '("" "" 3 6 9 12))
+   (check-equal? (rolling sum 3 '(0 1 2 3 4 5)) '("" "" 3 6 9 12))
 
-  (check-equal? (transpose '((1 2 3) (4 5 6))) '((1 4) (2 5) (3 6)))
+   (check-equal? (transpose '((1 2 3) (4 5 6))) '((1 4) (2 5) (3 6)))
 
-  (define d1 (date 0 0 0 14 1 2016 0 0 #f 0))
-  (check-equal? (date->dd/mm/yyyy d1) "14/01/2016")
- 
-  (define elapsed-time (- (current-inexact-milliseconds) start-time))
-  (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))
-  
-  )
+   (define d1 (date 0 0 0 14 1 2016 0 0 #f 0))
+   (check-equal? (date->dd/mm/yyyy d1) "14/01/2016")
+
+   ))

@@ -188,36 +188,33 @@
 
 #| =================== tests =================== |#
 
+
 (module+ test
   (require rackunit
            syntax/location)
 
-  (define module-name (path->string (syntax-source-file-name #'here)))
-  (printf "testing: ~a\n" module-name)
-  (define start-time (current-inexact-milliseconds))
-
-  (define t0
-    (table
-     '("date" "a" "b")
-     '(("2025-12-15" 33.5 44.2)
-       ("2025-12-16" 31.0 45.1)
-       ("2025-12-17" 30.0 40.0))))
-
-  (check-equal? (table-read t0 "b") '(44.2 45.1 40.0))
-  (check-equal? (table-read (table-create t0 "c" '(#t #f #t)) "c") '(#t #f #t))
-  (check-equal? (table-filter t0 (lambda (row) (> (list-ref row 1) 31)))
-                (table '("date" "a" "b") '(("2025-12-15" 33.5 44.2))))
-  (check-equal? (table-update (table-update t0 "a" number->string) "a" string->number) t0)
-
-  (define file-name "C:/Users/tomje/Downloads/SP500.csv")
-  (define t1 (table-from-csv file-name))
-  (check-equal? (table-shape t1) '(2610 2))
-  (define ns (hash "observation_date" "date" "SP500" "close"))
-  (check-equal? (table-headers (table-rename t1 ns)) '("date" "close"))
-  (check-true (> (first (table-shape t1)) (first (table-shape (table-dropna t1)))))
-  ;;(table-print t1 3 #:head #f)
+  (timeit
+   (path->string (syntax-source-file-name #'here))
   
-  (define elapsed-time (- (current-inexact-milliseconds) start-time))
-  (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))
+   (define t0
+     (table
+      '("date" "a" "b")
+      '(("2025-12-15" 33.5 44.2)
+        ("2025-12-16" 31.0 45.1)
+        ("2025-12-17" 30.0 40.0))))
 
-  )
+   (check-equal? (table-read t0 "b") '(44.2 45.1 40.0))
+   (check-equal? (table-read (table-create t0 "c" '(#t #f #t)) "c") '(#t #f #t))
+   (check-equal? (table-filter t0 (lambda (row) (> (list-ref row 1) 31)))
+                 (table '("date" "a" "b") '(("2025-12-15" 33.5 44.2))))
+   (check-equal? (table-update (table-update t0 "a" number->string) "a" string->number) t0)
+
+   (define file-name "C:/Users/tomje/Downloads/SP500.csv")
+   (define t1 (table-from-csv file-name))
+   (check-equal? (table-shape t1) '(2610 2))
+   (define ns (hash "observation_date" "date" "SP500" "close"))
+   (check-equal? (table-headers (table-rename t1 ns)) '("date" "close"))
+   (check-true (> (first (table-shape t1)) (first (table-shape (table-dropna t1)))))
+   ;;(table-print t1 3 #:head #f)
+ 
+   ))
