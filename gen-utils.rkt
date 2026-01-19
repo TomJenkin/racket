@@ -16,7 +16,8 @@
          var
          var-sample
          transpose
-         date->dd/mm/yyyy)
+         date->dd/mm/yyyy
+         string->date-iso)
 
 #| =================== private =================== |#
 
@@ -104,6 +105,11 @@
    (pad-left (date-day d) 2) "/"
    (pad-left (date-month d) 2) "/"
    (number->string (date-year d))))
+
+;; convert from string to date (assumes str is: yyyy-mm-dd)
+(define (string->date-iso str)
+  (apply (lambda (y m d) (date 0 0 0 d m y 0 0 #f 0))
+         (map string->number (string-split str "-"))))
 
 #| =================== tests =================== |#
 

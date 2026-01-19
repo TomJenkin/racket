@@ -1,20 +1,24 @@
 #lang racket
 
 (require csv-reading
-         racket/list)
+         racket/list
+         "gen-utils.rkt")
 
 (provide (struct-out table)
-         read-csv
-         table-create
+         table-from-csv
          table-shape
-         table-col
-         table-add-col
+         table-create
+         table-read
+         table-update
+         table-delete
          table-filter
          table->list
          table-head
          table-tail
          table-rename
-         table-dropna)
+         table-dropna
+         table-print
+         )
 
 #| =================== private =================== |#
 
@@ -41,10 +45,41 @@
 
   (values headers rows))
 
+;; column index
 (define (col-index headers name who)
   (define idx (index-of headers name equal?))
   (unless idx (error who "unknown column: ~a" name))
   idx)
+
+;; print formatter
+(define (print-formatter e)
+  (cond
+    [(date? e) (date->dd/mm/yyyy e)]
+    [(number? e) (real->decimal-string e 2)]
+    [(string? e) (if (string=? e "") "NA" e)]
+    [else e]))
+
+;; print table lines
+(define (print-lines rows)
+
+  (define (pad-right s w)
+    (define n (- w (string-length s)))
+    (if (<= n 0)
+        s
+        (string-append s (make-string n #\space))))
+
+  (define widths
+    (apply map
+           (lambda col (apply max (map string-length col)))
+           rows))
+  
+  (for-each
+   (lambda (row)
+     (for ([cell row] [w widths])
+       (display (pad-right cell w))
+       (display "  "))
+     (newline))
+   rows))
 
 #| =================== public =================== |#
 
@@ -52,13 +87,10 @@
   #:transparent
   #:guard table-guard)
 
-;; read csv
-(define (read-csv file-name)
-  (call-with-input-file file-name csv->list))
-
-;; create a table (kept for API convenience; guard does the real validation)
-(define (table-create headers rows)
-  (table headers rows))
+;; table from csv
+(define (table-from-csv file-name)
+  (define data (call-with-input-file file-name csv->list))
+  (table (car data) (cdr data)))
 
 ;; (rows cols)
 (define (table-shape t)
@@ -66,13 +98,13 @@
         (length (table-headers t))))
 
 ;; get a column by name
-(define (table-col t name)
+(define (table-read t name)
   (define idx (col-index (table-headers t) name 'table-col))
   (for/list ([row (in-list (table-rows t))])
     (list-ref row idx)))
 
 ;; add a new column at the end
-(define (table-add-col t name values)
+(define (table-create t name values)
   (define rs (table-rows t))
   (unless (= (length rs) (length values))
     (error 'table-add-col "values length (~a) must match row count (~a)"
@@ -114,6 +146,46 @@
             (table-rows t)))
   (table (table-headers t) rs))
 
+;; apply f to every value in column `name`
+(define (table-update t name fn)
+  (define idx (col-index (table-headers t) name 'table-map-col))
+  (define new-rows
+    (for/list ([row (in-list (table-rows t))])
+      (for/list ([v (in-list row)] [i (in-naturals)])
+        (if (= i idx) (fn v) v))))
+  (table (table-headers t) new-rows))
+
+;; remove column
+(define (table-delete t name)
+  (define idx (col-index (table-headers t) name 'table-drop-col))
+
+  (define new-headers
+    (for/list ([h (in-list (table-headers t))]
+               [i (in-naturals)]
+               #:unless (= i idx))
+      h))
+
+  (define new-rows
+    (for/list ([row (in-list (table-rows t))])
+      (for/list ([v (in-list row)]
+                 [i (in-naturals)]
+                 #:unless (= i idx))
+        v)))
+
+  (table new-headers new-rows))
+
+;; pretty print
+(define (table-print t n #:head [head #t])
+  (define h1 (table-headers t))
+  (define v1 (table-rows t))
+  (define v2 (map (lambda (ls) (map print-formatter ls)) v1))
+  (define v3 (if head (take v2 n) (take-right v2 n)))
+  (define r1 (cons h1 v3))
+  (define nn 60)
+  (displayln (make-string nn #\=))
+  (print-lines r1)
+  (displayln (make-string nn #\=)))
+
 #| =================== tests =================== |#
 
 (module+ test
@@ -125,26 +197,27 @@
   (define start-time (current-inexact-milliseconds))
 
   (define t0
-    (table-create
+    (table
      '("date" "a" "b")
      '(("2025-12-15" 33.5 44.2)
        ("2025-12-16" 31.0 45.1)
        ("2025-12-17" 30.0 40.0))))
 
-  (check-equal? (table-col t0 "b") '(44.2 45.1 40.0))
-  (check-equal? (table-col (table-add-col t0 "c" '(#t #f #t)) "c") '(#t #f #t))
+  (check-equal? (table-read t0 "b") '(44.2 45.1 40.0))
+  (check-equal? (table-read (table-create t0 "c" '(#t #f #t)) "c") '(#t #f #t))
   (check-equal? (table-filter t0 (lambda (row) (> (list-ref row 1) 31)))
                 (table '("date" "a" "b") '(("2025-12-15" 33.5 44.2))))
+  (check-equal? (table-update (table-update t0 "a" number->string) "a" string->number) t0)
 
   (define file-name "C:/Users/tomje/Downloads/SP500.csv")
-  (define data (read-csv file-name))
-  (define t1 (table-create (car data) (cdr data)))
+  (define t1 (table-from-csv file-name))
   (check-equal? (table-shape t1) '(2610 2))
-  (check-equal? (table->list t1) data)
   (define ns (hash "observation_date" "date" "SP500" "close"))
   (check-equal? (table-headers (table-rename t1 ns)) '("date" "close"))
   (check-true (> (first (table-shape t1)) (first (table-shape (table-dropna t1)))))
-
+  ;;(table-print t1 3 #:head #f)
   
   (define elapsed-time (- (current-inexact-milliseconds) start-time))
-  (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1)))
+  (printf "testing: success! (runtime = ~a ms)\n" (real->decimal-string elapsed-time 1))
+
+  )
