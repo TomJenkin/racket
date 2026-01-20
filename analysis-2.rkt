@@ -25,53 +25,50 @@
 
 (table-print t1 10 #:head #t)
 
-;; create a generalised plot function that can be extended to multiple lines!!!!
-
 #|
-(parameterize
-    ([plot-x-ticks (date-ticks)]
-     [plot-width 600]
-     [plot-height 300])
-  (plot
-   (lines
-    (map vector
-         ;;(map date->seconds (hash-ref df "date"))
-         (map datetime->real (table-read t1 "date"))
-         (table-read t1 "close")))
-   #:x-label "Date"
-   #:y-label "Value"
-   #:aspect-ratio #f
-   #:out-file (string-append file-path "test.png")
-   #:title (string-append "Market: " file-name)))
+(define ls
+  (list
+   (list (table-read t1 "date") (table-read t1 "close"))
+   (list (table-read t1 "date") (table-read t1 "mean-close"))
+   (list (table-read t1 "date") (table-read t1 "std-close"))))
+
+(define aa (map (lambda (p) '((lines (map vector (first p) (second p))))) ls))
+(define bb (first aa))
+(define cc (first bb))
+(define dd (first cc))
 |#
 
+;; lines-1
+(define (make-lines-list-1 t date-col lines-specs)
+  (for/list ([spec lines-specs])
+    (match-define (list col-name label) spec)
+    (lines
+     (map vector
+          (map datetime->real (table-read t date-col))
+          (table-read t col-name))
+     #:label label)))
+
+;; lines-2
+(define (make-lines-list-2 t date-col lines-specs)
+  (define date-values (map datetime->real (table-read t date-col)))
+  (map (lambda (spec)
+         (lines
+          (map vector date-values (table-read t (first spec)))
+          #:label (second spec)))
+       lines-specs))
+
+(define plot-lines (make-lines-list-2 t1 "date"
+                                      '(("close" "Close")
+                                        ("mean-close" "Mean")
+                                        ;;("std-close" "STD")
+                                        )))
+
 (parameterize
     ([plot-x-ticks (date-ticks)]
      [plot-width 600]
-     [plot-height 300])
+     [plot-height 350])
   (plot
-   (list
-    ;; first line: close
-    (lines
-     (map vector
-          (map datetime->real (table-read t1 "date"))
-          (table-read t1 "close"))
-     #:label "Close")
-
-    ;; second line: e.g. another column
-    (lines
-     (map vector
-          (map datetime->real (table-read t1 "date"))
-          (table-read t1 "mean-close"))
-     #:label "Mean")
-
-    (lines
-     (map vector
-          (map datetime->real (table-read t1 "date"))
-          (table-read t1 "std-close"))
-     #:label "STD")
-
-    )
+   plot-lines
    #:x-label "Date"
    #:y-label "Value"
    #:aspect-ratio #f
