@@ -1,8 +1,5 @@
 #lang racket
 
-(require rackunit
-         syntax/location)
-
 (provide pipe
          compose-pipe
          assert
@@ -135,6 +132,9 @@
 #| =================== tests =================== |#
 
 (module+ test
+
+  (require rackunit
+           syntax/location)
 
   (timeit
    (path->string (syntax-source-file-name #'here))

@@ -2,7 +2,7 @@
 
 (require csv-reading
          racket/list
-         "gen-tools.rkt")
+         (prefix-in gt: "gen-tools.rkt"))
 
 (provide (struct-out table)
          table-from-csv
@@ -54,7 +54,7 @@
 ;; print formatter
 (define (print-formatter e)
   (cond
-    [(date? e) (date->dd/mm/yyyy e)]
+    [(date? e) (gt:date->dd/mm/yyyy e)]
     [(number? e) (real->decimal-string e 2)]
     [(string? e) (if (string=? e "") "NA" e)]
     [else e]))
@@ -193,7 +193,7 @@
   (require rackunit
            syntax/location)
 
-  (timeit
+  (gt:timeit
    (path->string (syntax-source-file-name #'here))
   
    (define t0
