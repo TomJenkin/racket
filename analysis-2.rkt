@@ -3,8 +3,8 @@
 (require plot
          rackunit
          syntax/location
-         "data-table-7.rkt"
-         "gen-utils.rkt")
+         "data-table.rkt"
+         "gen-tools.rkt")
 
 #| =================== plots =================== |#
 
