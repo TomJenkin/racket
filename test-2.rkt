@@ -16,6 +16,7 @@
 ;; k      : number of clusters
 ;; iters  : number of iterations
 (define (kmeans-simple points k iters)
+  
   (define (dist2 p q)
     (+ (sqr (- (first p) (first q)))
        (sqr (- (second p) (second q)))))
@@ -39,7 +40,7 @@
 
 (define pts
   '((1 1) (1.1 0.9) (0.9 1.2)
-    (5 5) (5.2 4.8) (4.9 5.1)))
+          (5 5) (5.2 4.8) (4.9 5.1)))
 
 (kmeans-simple pts 2 5)
 
