@@ -6,7 +6,7 @@
          "data-table.rkt"
          "gen-tools.rkt")
 
-(provide make-lines-list-2
+(provide make-lines-list-3
          )
 
 #| =================== plots =================== |#
@@ -29,6 +29,18 @@
           (map vector date-values (table-read t (first spec)))
           #:label (second spec)))
        lines-specs))
+
+;; lines-3
+(define (make-lines-list-3 t date-col lines-specs)
+  (define date-values (map datetime->real (table-read t date-col)))
+  (for/list ([spec (in-list lines-specs)])
+    (define col (hash-ref spec 'col))
+    (define pts (map vector date-values (table-read t col)))
+    (define kws
+      (sort (for/list ([k (in-list (hash-keys spec))]
+                       #:when (keyword? k)) k) keyword<?))
+    (define vals (map (lambda (k) (hash-ref spec k)) kws))
+    (keyword-apply lines kws vals (list pts))))
 
 #| =================== tests =================== |#
 
@@ -54,11 +66,19 @@
 
    (table-print t1 10 #:head #t)
 
-   (define plot-lines (make-lines-list-2 t1 "date"
-                                         '(("close" "Close")
-                                           ("mean-close" "Mean")
-                                           ;;("std-close" "STD")
-                                           )))
+   (define plot-lines-2 (make-lines-list-2 t1 "date"
+                                           '(("close" "Close")
+                                             ("mean-close" "Mean")
+                                             ;;("std-close" "STD")
+                                             )))
+
+   (define plot-lines-3
+     (make-lines-list-3
+      t1 "date"
+      (list
+       (hash 'col "close" '#:label "Close" '#:color "blue" '#:width 1)
+       (hash 'col "mean-close"  '#:label "Mean"  '#:style 'dot)
+       (hash 'col "std-close"  '#:label "STD"))))
 
    (parameterize
        ([plot-x-ticks (date-ticks)]
@@ -66,7 +86,8 @@
         [plot-height 800]
         [plot-new-window? #t])
      (plot
-      plot-lines
+      ;;plot-lines-2
+      plot-lines-3
       #:x-label "Date"
       #:y-label "Value"
       #:aspect-ratio #f
