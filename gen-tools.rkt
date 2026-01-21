@@ -15,7 +15,8 @@
          transpose
          date->dd/mm/yyyy
          string->date-iso
-         timeit)
+         timeit
+         timeit-2)
 
 #| =================== private =================== |#
 
@@ -29,15 +30,17 @@
 
 #| =================== public =================== |#
 
-#|
-(define-syntax-rule (timeit label expr ...)
+;; timeit2
+;; same issues apply here. read timeit comments!
+(define-syntax-rule (timeit-2 label expr ...)
   (begin
     (printf "~a: " label)
     (flush-output)
     (time (begin expr ...))))
-|#
 
-;; timeit
+;; timeit (caution, sometimes supresses output of expression being called, e.g. on multiple lines)
+;; reason is possibly only returns last line but some cases not even that. want to have
+;; normal behaviour in what you're calling. rework this code!
 (define-syntax-rule (timeit label expr ...)
   (let ()
     (printf "~a: " label)
