@@ -14,7 +14,7 @@
 ;;dt1
 
 ;; sample print
-(dt:table-print dt1 25 #:head #t)
+(dt:table-print dt1 5 #:head #t)
 
 ;; simple kernel
 (define (slide-dot signal kernel)

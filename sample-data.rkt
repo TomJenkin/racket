@@ -1,6 +1,7 @@
 #lang racket
 
-(require (prefix-in dt: "data-table.rkt")
+(require math/statistics
+         (prefix-in dt: "data-table.rkt")
          (prefix-in gt: "gen-tools.rkt"))
 
 (provide data-sp500)
@@ -21,9 +22,9 @@
            ;;(lambda (t) (dt:table-dropna t))
            (lambda (t) (dt:table-update t "close" string->number))
            (lambda (t) (dt:table-update t "date" gt:string->date-iso))
-           (lambda (t) (dt:table-create t "mean-close" (gt:rolling gt:mean 50 (dt:table-read t "close"))))
-           (lambda (t) (dt:table-create t "std-close" (gt:rolling gt:std-dev 50 (dt:table-read t "close"))))
-           (lambda (t) (dt:table-create t "var-close" (gt:rolling gt:var 50 (dt:table-read t "close"))))
+           (lambda (t) (dt:table-create t "mean-close" (gt:rolling mean 50 (dt:table-read t "close"))))
+           (lambda (t) (dt:table-create t "std-close" (gt:rolling stddev 50 (dt:table-read t "close"))))
+           (lambda (t) (dt:table-create t "var-close" (gt:rolling variance 50 (dt:table-read t "close"))))
            (lambda (t) (dt:table-dropna t))
            ))
 
@@ -36,9 +37,9 @@
    dt:table-dropna
    (lambda (t) (dt:table-update t "close" string->number))
    (lambda (t) (dt:table-update t "date" gt:string->date-iso))
-   (lambda (t) (dt:table-create t "mean-close" (gt:rolling gt:mean 50 (dt:table-read t "close"))))
-   (lambda (t) (dt:table-create t "std-close" (gt:rolling gt:std-dev 50 (dt:table-read t "close"))))
-   (lambda (t) (dt:table-create t "var-close" (gt:rolling gt:var 50 (dt:table-read t "close"))))
+   (lambda (t) (dt:table-create t "mean-close" (gt:rolling mean 50 (dt:table-read t "close"))))
+   (lambda (t) (dt:table-create t "std-close" (gt:rolling stddev 50 (dt:table-read t "close"))))
+   (lambda (t) (dt:table-create t "var-close" (gt:rolling variance 50 (dt:table-read t "close"))))
    (lambda (t) (dt:table-dropna t))))
 
 (define data-sp500-2  (fn-data "C:/Users/tomje/Downloads/SP500.csv"))
@@ -50,9 +51,9 @@
 (define dt3 (dt:table-dropna dt2b))
 (define dt4 (dt:table-update dt3 "close" string->number))
 (define dt5 (dt:table-update dt4 "date" gt:string->date-iso))
-(define dt6 (dt:table-create dt5 "mean-close" (gt:rolling gt:mean 50 (dt:table-read dt5 "close"))))
-(define dt7 (dt:table-create dt6 "std-close" (gt:rolling gt:std-dev 50 (dt:table-read dt6 "close"))))
-(define dt8 (dt:table-create dt7 "var-close" (gt:rolling gt:var 50 (dt:table-read dt7 "close"))))
+(define dt6 (dt:table-create dt5 "mean-close" (gt:rolling mean 50 (dt:table-read dt5 "close"))))
+(define dt7 (dt:table-create dt6 "std-close" (gt:rolling stddev 50 (dt:table-read dt6 "close"))))
+(define dt8 (dt:table-create dt7 "var-close" (gt:rolling variance 50 (dt:table-read dt7 "close"))))
 (define dt9 (dt:table-dropna dt8))
 ;;(dt:table-head dt9 10)
 

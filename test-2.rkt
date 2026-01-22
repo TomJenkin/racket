@@ -1,6 +1,9 @@
 #lang racket
 
-(require (prefix-in gt: "gen-tools.rkt"))
+(require rnrs/base-6
+         (prefix-in gt: "gen-tools.rkt"))
+
+assert
 
 (define (square x) (* x x))
 

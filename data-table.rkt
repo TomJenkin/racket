@@ -227,5 +227,8 @@
   (check-true (> (first (table-shape t1)) (first (table-shape (table-dropna (table-replace t1 "" '()))))))
   ;;(table-print t1 3 #:head #f)
 
+  ;;(displayln "write function to work with table-print to find max width of each column!")
+
+  
   ;;)
   )

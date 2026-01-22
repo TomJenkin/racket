@@ -8,19 +8,20 @@
          enumerate
          slice
          rolling
-         sum
-         mean
-         std-dev
-         std-dev-sample
-         var
-         var-sample
+         ;;sum
+         ;;mean
+         ;;std-dev
+         ;;std-dev-sample
+         ;;var
+         ;;var-sample
          transpose
          date->dd/mm/yyyy
          string->date-iso
-         timeit
-         timeit-2
-         maximum
-         minimum)
+         ;;timeit
+         ;;timeit-2
+         ;;maximum
+         ;;minimum
+         )
 
 #| =================== private =================== |#
 

@@ -47,37 +47,38 @@
            syntax/location
            (prefix-in sd: "sample-data.rkt"))
 
-  (gt:timeit
-   (path->string (syntax-source-file-name #'here))
+  ;;(gt:timeit
+  ;; (path->string (syntax-source-file-name #'here))
 
-   (dt:table-print sd:data-sp500 10 #:head #t)
+  (dt:table-print sd:data-sp500 10 #:head #t)
 
-   (define plot-lines-2 (make-lines-list-2 sd:data-sp500 "date"
-                                           '(("close" "Close")
-                                             ("mean-close" "Mean")
-                                             ;;("std-close" "STD")
-                                             )))
+  (define plot-lines-2 (make-lines-list-2 sd:data-sp500 "date"
+                                          '(("close" "Close")
+                                            ("mean-close" "Mean")
+                                            ;;("std-close" "STD")
+                                            )))
 
-   (define plot-lines-3
-     (make-lines-list-3
-      sd:data-sp500 "date"
-      (list
-       (hash 'col "close" '#:label "Close" '#:color "blue" '#:width 1)
-       (hash 'col "mean-close"  '#:label "Mean"  '#:style 'dot)
-       (hash 'col "std-close"  '#:label "STD"))))
+  (define plot-lines-3
+    (make-lines-list-3
+     sd:data-sp500 "date"
+     (list
+      (hash 'col "close" '#:label "Close" '#:color "blue" '#:width 1)
+      (hash 'col "mean-close"  '#:label "Mean"  '#:style 'dot)
+      (hash 'col "std-close"  '#:label "STD"))))
 
-   (parameterize
-       ([plot-x-ticks (date-ticks)]
-        [plot-width 1400]
-        [plot-height 800]
-        [plot-new-window? #t])
-     (plot
-      ;;plot-lines-2
-      plot-lines-3
-      #:x-label "Date"
-      #:y-label "Value"
-      #:aspect-ratio #f
-      ;;#:out-file (string-append file-path "test.png")
-      #:title "Market: SP500"))
+  (parameterize
+      ([plot-x-ticks (date-ticks)]
+       [plot-width 1400]
+       [plot-height 800]
+       [plot-new-window? #t])
+    (plot
+     ;;plot-lines-2
+     plot-lines-3
+     #:x-label "Date"
+     #:y-label "Value"
+     #:aspect-ratio #f
+     ;;#:out-file (string-append file-path "test.png")
+     #:title "Market: SP500"))
 
-   ))
+  ;;)
+  )
