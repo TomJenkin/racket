@@ -1,6 +1,6 @@
 #lang racket
 
-
+;;(require math)
 
 ;; K-Means clustering
 
