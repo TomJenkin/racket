@@ -1,5 +1,7 @@
 #lang racket
 
+(require syntax/location)
+
 (provide pipe
          compose-pipe
          assert
@@ -16,7 +18,9 @@
          date->dd/mm/yyyy
          string->date-iso
          timeit
-         timeit-2)
+         timeit-2
+         maximum
+         minimum)
 
 #| =================== private =================== |#
 
@@ -29,6 +33,9 @@
   (string-append (make-string (max 0 (- width (string-length s))) #\0) s))
 
 #| =================== public =================== |#
+
+;;(define (module-name)
+;;  (path->string (syntax-source-file-name #'here)))
 
 ;; timeit2
 ;; same issues apply here. read timeit comments!
@@ -84,7 +91,15 @@
 ;; rolling stats (e.g. rolling mean, std, etc.)
 (define (rolling fn n ls)
   (for/list ([i (in-range (length ls))])
-    (if (< i (sub1 n)) "" (fn (take (list-tail ls (- i (sub1 n))) n)))))
+    (if (< i (sub1 n)) null (fn (take (list-tail ls (- i (sub1 n))) n)))))
+
+;; min
+(define (minimum ls)
+  (apply min ls))
+
+;; max
+(define (maximum ls)
+  (apply max ls))
 
 ;; sum
 (define (sum ls)
@@ -139,31 +154,32 @@
   (require rackunit
            syntax/location)
 
-  (timeit
-   (path->string (syntax-source-file-name #'here))
+  (check-equal? (pipe '(1 2 3 4 5) cdr cdr car) 3)
 
-   (check-equal? (pipe '(1 2 3 4 5) cdr cdr car) 3)
+  (check-equal? ((compose-pipe cdr cdr car) '(1 2 3 4 5)) 3)
 
-   (check-equal? ((compose-pipe cdr cdr car) '(1 2 3 4 5)) 3)
+  (check-exn exn:fail? (lambda () (assert #f)))
 
-   (check-exn exn:fail? (lambda () (assert #f)))
+  (check-equal? (enumerate '(1 2 3)) '((0 . 1) (1 . 2) (2 . 3)))
 
-   (check-equal? (enumerate '(1 2 3)) '((0 . 1) (1 . 2) (2 . 3)))
+  (check-equal? (list-ref (enumerate '(1 2 3 4 5) 1) 2) '(3 . 3))
 
-   (check-equal? (list-ref (enumerate '(1 2 3 4 5) 1) 2) '(3 . 3))
+  (check-equal? (slice '(0 1 2 3 4 5) 0 3) '(0 1 2))
 
-   (check-equal? (slice '(0 1 2 3 4 5) 0 3) '(0 1 2))
+  (check-equal? (rolling mean 3 '(0 1 2 3 4 5)) '(() () 1 2 3 4))
 
-   (check-equal? (rolling mean 3 '(0 1 2 3 4 5)) '("" "" 1 2 3 4))
+  (define (var-test ls) (square (std-dev ls)))
+  (check-= (var '(0 1 2 3 4 5)) (var-test '(0 1 2 3 4 5)) 1e-10)
 
-   (define (var-test ls) (square (std-dev ls)))
-   (check-= (var '(0 1 2 3 4 5)) (var-test '(0 1 2 3 4 5)) 1e-10)
+  (check-equal? (rolling sum 3 '(0 1 2 3 4 5)) '(() () 3 6 9 12))
 
-   (check-equal? (rolling sum 3 '(0 1 2 3 4 5)) '("" "" 3 6 9 12))
+  (check-equal? (transpose '((1 2 3) (4 5 6))) '((1 4) (2 5) (3 6)))
 
-   (check-equal? (transpose '((1 2 3) (4 5 6))) '((1 4) (2 5) (3 6)))
+  (define d1 (date 0 0 0 14 1 2016 0 0 #f 0))
+  (check-equal? (date->dd/mm/yyyy d1) "14/01/2016")
 
-   (define d1 (date 0 0 0 14 1 2016 0 0 #f 0))
-   (check-equal? (date->dd/mm/yyyy d1) "14/01/2016")
+  (check-equal? (rolling maximum 3 (range 0 5)) '(() () 2 3 4))
 
-   ))
+  (check-equal? (rolling minimum 3 (range 0 5)) '(() () 0 1 2))
+
+  )

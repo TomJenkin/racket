@@ -11,8 +11,10 @@
 ;; define data
 (define dt1 sd:data-sp500)
 
+;;dt1
+
 ;; sample print
-(dt:table-print dt1 10 #:head #t)
+(dt:table-print dt1 25 #:head #t)
 
 ;; simple kernel
 (define (slide-dot signal kernel)
@@ -28,4 +30,28 @@
 ;;(slide-dot signal1 kernel1)
 
 (slide-dot '(1 2 3 4 5) '(1 0 -1))
- 
+
+
+(displayln ".............")
+
+;;(define dt2 (dt:table-head dt1 20))
+
+;;(define ls1 (gt:rolling (lambda (e) e) 5 (dt:table-read dt2 "close")))
+
+;;(map vector ls1)
+
+
+;;(define dt3 (dt:table-create dt2 "tail" ls1))
+
+;; sample print
+;;(dt:table-print dt3 10 #:head #t)
+
+;;dt3
+
+;;(equal? (list 1 2 3) '(1 2 3))
+
+;;(quote (list 1 2 3))
+
+;;(list 1 2 3)
+
+;;'(1 2 3)

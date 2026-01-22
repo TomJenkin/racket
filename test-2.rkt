@@ -1,5 +1,7 @@
 #lang racket
 
+(require (prefix-in gt: "gen-tools.rkt"))
+
 (define (square x) (* x x))
 
 (square 42)
@@ -9,8 +11,22 @@
 (match-define (list a b) '(33 44))
 
 
+(define (print-formatter e)
+  (cond
+    [(date? e) (gt:date->dd/mm/yyyy e)]
+    [(number? e) (real->decimal-string e 2)]
+    [(string? e) (if (string=? e "") null e)]
+    [(list? e) (if (equal? e null) null e)]
+    [else e]))
 
 
+(print-formatter 333.6982)
+(print-formatter '(1 2 3 4 5))
+(print-formatter null)
+(print-formatter '())
+
+
+(displayln "...................................")
 
 ;; points : (listof (list x y))
 ;; k      : number of clusters
