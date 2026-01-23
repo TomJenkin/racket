@@ -17,6 +17,7 @@
          table-tail
          table-rename
          table-dropna
+         table->string
          table-print
          table-replace
          )
@@ -61,6 +62,8 @@
     [(list? e) (if (equal? e null) "NA" e)]
     [else e]))
 
+
+#|
 ;; print table lines
 (define (print-lines rows)
 
@@ -82,6 +85,7 @@
        (display "  "))
      (newline))
    rows))
+|#
 
 #| =================== public =================== |#
 
@@ -179,23 +183,30 @@
 ;; table-replace
 (define (table-replace t old-val new-val)
   (define new-rows
-  (map (lambda (row)
-         (map (lambda (cell) (if (equal? cell old-val) new-val cell)) row))
-       (table-rows t)))
+    (map (lambda (row)
+           (map (lambda (cell) (if (equal? cell old-val) new-val cell)) row))
+         (table-rows t)))
   (table (table-headers t) new-rows)
   )
 
 ;; pretty print
-(define (table-print t n #:head [head #t])
+(define (table->string t n #:head [head #t])
   (define h1 (table-headers t))
   (define v1 (table-rows t))
   (define v2 (map (lambda (ls) (map print-formatter ls)) v1))
   (define v3 (if head (take v2 n) (take-right v2 n)))
   (define r1 (cons h1 v3))
-  (define nn 50)
-  (displayln (make-string nn #\=))
-  (print-lines r1)
-  (displayln (make-string nn #\=)))
+
+  (define rows-string (gt:rows->string r1))
+  (define rows-string-lengths (gt:row-lengths rows-string))
+  (define nn (first rows-string-lengths))
+  (define ss (make-string nn #\-))
+  (string-append ss "\n" rows-string "\n" ss)
+  )
+
+;; table print
+(define (table-print t n #:head [head #t])
+  (displayln (table->string t n #:head head)))
 
 #| =================== tests =================== |#
 
@@ -213,6 +224,9 @@
        ("2025-12-16" 31.0 45.1)
        ("2025-12-17" 30.0 40.0))))
 
+  ;;(table->string t0 3 #:head #t)
+  ;;(table-print t0 3)
+  
   (check-equal? (table-read t0 "b") '(44.2 45.1 40.0))
   (check-equal? (table-read (table-create t0 "c" '(#t #f #t)) "c") '(#t #f #t))
   (check-equal? (table-filter t0 (lambda (row) (> (list-ref row 1) 31)))

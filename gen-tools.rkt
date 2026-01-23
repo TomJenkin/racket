@@ -21,6 +21,9 @@
          ;;timeit-2
          ;;maximum
          ;;minimum
+         type-of
+         rows->string
+         row-lengths
          )
 
 #| =================== private =================== |#
@@ -34,6 +37,19 @@
   (string-append (make-string (max 0 (- width (string-length s))) #\0) s))
 
 #| =================== public =================== |#
+
+(define (type-of x)
+  (cond
+    [(number? x) 'number]
+    [(string? x) 'string]
+    [(symbol? x) 'symbol]
+    [(list? x) 'list]
+    [(pair? x) 'pair]
+    [(procedure? x) 'procedure]
+    [(vector? x) 'vector]
+    [(hash? x) 'hash]
+    [(boolean? x) 'boolean]
+    [else 'unknown]))
 
 ;;(define (module-name)
 ;;  (path->string (syntax-source-file-name #'here)))
@@ -148,6 +164,45 @@
   (apply (lambda (y m d) (date 0 0 0 d m y 0 0 #f 0))
          (map string->number (string-split str "-"))))
 
+#|
+;; print table rows
+(define (print-rows rows #:sep [sep " | "])
+
+  ;; max column widths
+  (define (max-column-widths rows)
+    (map (lambda (col)
+           (apply max (map string-length col))) (apply map list rows)))
+
+  ;; pad right
+  (define (pad-right s w)
+    (define n (string-length s))
+    (if (>= n w) s (string-append s (make-string (- w n) #\space))))
+
+  ;; print rows
+  (define widths (max-column-widths rows))
+  (for ([row rows])
+    (displayln (string-join (map (lambda (cell w) (pad-right cell w)) row widths) sep))))
+|#
+
+;; print table rows
+(define (rows->string rows #:sep [sep " | "])
+
+  ;; max column widths
+  (define (max-column-widths rows)
+    (map (lambda (col) (apply max (map string-length col))) (apply map list rows)))
+
+  ;; pad right
+  (define (pad-right s w)
+    (string-append s (make-string (max 0 (- w (string-length s))) #\space)))
+
+  ;; build output string
+  (define widths (max-column-widths rows))
+  (string-join (map (lambda (row) (string-join (map pad-right row widths) sep)) rows) "\n"))
+
+;; line lengths
+(define (row-lengths s)
+  (map string-length (string-split s "\n")))
+
 #| =================== tests =================== |#
 
 (module+ test
@@ -155,6 +210,14 @@
   (require rackunit
            syntax/location)
 
+  (define rows '(("one" "hello" "goodbye") ("1" "thomas" "three"))) 
+  (define rows-string (rows->string rows))
+  (define rows-string-lengths (row-lengths rows-string))
+  (define nn (first rows-string-lengths))
+  (displayln (make-string nn #\-))
+  (displayln rows-string)
+  (displayln (make-string nn #\-))
+  
   (check-equal? (pipe '(1 2 3 4 5) cdr cdr car) 3)
 
   (check-equal? ((compose-pipe cdr cdr car) '(1 2 3 4 5)) 3)
