@@ -1,9 +1,29 @@
 #lang racket
 
-;; K-Means-1 clustering
-;; points : (listof (listof number))   ; all points same dimension
-;; k      : number of clusters
-;; iters  : number of iterations
+(provide
+ (contract-out
+  [kmeans-1 kmeans/c]
+  [kmeans-2 kmeans/c]
+  [kmeans-3 kmeans/c]))
+
+;; kmeans/c :
+;;   points : non-empty list of N-dimensional real-valued points
+;;   k      : number of clusters
+;;   iters  : number of iterations
+;;   ->     : list of cluster centroids
+(define kmeans/c
+  (-> (non-empty-listof (listof real?))
+      exact-nonnegative-integer?
+      exact-nonnegative-integer?
+      (listof (listof real?))))
+
+(define kmeans/c-2
+  (-> (and/c (listof (listof real?)) (not/c null?))
+      exact-nonnegative-integer?
+      exact-nonnegative-integer?
+      (listof (listof real?))))
+
+;; fixed iterations
 (define (kmeans-1 points k iters)
   (define (dist2 p q) (for/sum ([x p] [y q]) (sqr (- x y))))
   (define (closest p cs) (argmin (λ (c) (dist2 p c)) cs))
@@ -17,18 +37,9 @@
         (filter (λ (p) (equal? c (closest p cs))) points)))
     (map mean clusters)))
 
-;; kmeans-2 : (listof (listof real?)) nat? nat? -> (listof (listof real?))
-;; Runs k-means for a fixed number of iterations on N-dimensional points.
-;; Assumes: points non-empty, all points same dimension, and (<= k (length points)).
+;; fixed iterations with contract
 (define/contract (kmeans-2 points k iters)
-  ;;(-> (and/c (listof (listof real?)) (not/c null?))
-  ;;    exact-nonnegative-integer?
-  ;;    exact-nonnegative-integer?
-  ;;    (listof (listof real?)))
-  (-> (non-empty-listof (listof real?))
-      exact-nonnegative-integer?
-      exact-nonnegative-integer?
-      (listof (listof real?)))
+  kmeans/c
   (define (dist2 p q) (for/sum ([x p] [y q]) (sqr (- x y))))
   (define (closest p cs) (argmin (λ (c) (dist2 p c)) cs))
   (define (mean pts)
@@ -89,7 +100,6 @@
   ;;(define res-1 (kmeans-2 ls1 7 100))
   (define res-1 (kmeans-3 ls1 7 100))
   (gt:list-of-lists-of-numbers-to-strings res-1 #:decimal-places 1)
-
   ;;ls2
  
   )
