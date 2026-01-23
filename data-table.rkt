@@ -53,41 +53,6 @@
   (unless idx (error who "unknown column: ~a" name))
   idx)
 
-#|
-;; print formatter
-(define (print-formatter e)
-  (cond
-    [(date? e) (gt:date->dd/mm/yyyy e)]
-    [(number? e) (real->decimal-string e 2)]
-    [(string? e) (if (string=? e "") "NA" e)]
-    [(list? e) (if (equal? e null) "NA" e)]
-    [else e]))
-|#
-
-#|
-;; print table lines
-(define (print-lines rows)
-
-  (define (pad-right s w)
-    (define n (- w (string-length s)))
-    (if (<= n 0)
-        s
-        (string-append s (make-string n #\space))))
-
-  (define widths
-    (apply map
-           (lambda col (apply max (map string-length col)))
-           rows))
-  
-  (for-each
-   (lambda (row)
-     (for ([cell row] [w widths])
-       (display (pad-right cell w))
-       (display "  "))
-     (newline))
-   rows))
-|#
-
 #| =================== public =================== |#
 
 (struct table (headers rows)
@@ -199,7 +164,7 @@
       [(date? e) (gt:date->dd/mm/yyyy e)]
       [(number? e) (real->decimal-string e 2)]
       [(string? e) (if (string=? e "") "NA" e)]
-      [(list? e) (if (equal? e null) "NA" e)]
+      [(list? e) (if (equal? e null) "NA" (format "~a" e))]
       [else e]))
   
   ;; max column widths
@@ -210,9 +175,9 @@
   (define (pad-right s w)
     (string-append s (make-string (max 0 (- w (string-length s))) #\space)))
 
-  (define rows-1 (cons (table-headers t) (table-rows t)))
-  (define rows-2 (map (lambda (ls) (map print-formatter ls)) rows-1))
-  (define rows-3 (if head (take rows-2 n) (take-right rows-2 n)))
+  (define rows-1 (if head (take (table-rows t) n) (take-right (table-rows t) n)))
+  (define rows-2 (cons (table-headers t) rows-1))
+  (define rows-3 (map (lambda (ls) (map print-formatter ls)) rows-2))
   (define max-widths (max-column-widths rows-3))
   (define rows-string
     (string-join (map (lambda (row) (string-join (map pad-right row max-widths) sep)) rows-3) "\n"))
