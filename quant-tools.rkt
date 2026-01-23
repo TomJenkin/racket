@@ -1,6 +1,6 @@
 #lang racket
 
-;;(require math)
+
 
 ;; K-Means clustering
 
@@ -38,21 +38,25 @@
 (module+ test
 
   (require rackunit
-           racket/format)
+           racket/format
+           (prefix-in gt: "gen-tools.rkt")
+           (prefix-in dt: "data-table.rkt")
+           (prefix-in sd: "sample-data.rkt"))
 
+  ;; ...
   (define pts '((1 1) (1.1 0.9) (0.9 1.2) (5 5) (5.2 4.8) (4.9 5.1)))
-
   (define aa (kmeans-simple pts 2 1000))
-
-  ;;aa
-
-  (define (process-2d fn ls)
-    (map (lambda (row) (map fn row)) ls))
-
+  (define (process-2d fn ls) (map (lambda (row) (map fn row)) ls))
   (define fn (lambda (e) (~r e #:precision 2)))
-  
   (process-2d fn aa)
 
- 
+  ;; cluster k-means
+  (define dt1 sd:data-sp500)
+  (define ls1 (dt:table-read dt1 "close"))
+  (define ls2 (gt:rolling (lambda (e) e) 5 ls1))
+  (define ls3 (filter (lambda (x) (not (equal? x null))) ls2))
 
+  (take ls3 10)
+
+  
   )

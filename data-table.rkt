@@ -53,6 +53,7 @@
   (unless idx (error who "unknown column: ~a" name))
   idx)
 
+#|
 ;; print formatter
 (define (print-formatter e)
   (cond
@@ -61,7 +62,7 @@
     [(string? e) (if (string=? e "") "NA" e)]
     [(list? e) (if (equal? e null) "NA" e)]
     [else e]))
-
+|#
 
 #|
 ;; print table lines
@@ -189,27 +190,41 @@
   (table (table-headers t) new-rows)
   )
 
-;; pretty print
-(define (table->string t n #:head [head #t])
-  (define h1 (table-headers t))
-  (define v1 (table-rows t))
-  (define v2 (map (lambda (ls) (map print-formatter ls)) v1))
-  (define v3 (if head (take v2 n) (take-right v2 n)))
-  (define r1 (cons h1 v3))
+;; table to string
+(define (table->string t n #:head [head #t] #:sep [sep " | "])
 
-  (define rows-string (gt:rows->string r1))
-  (define rows-string-lengths (gt:row-lengths rows-string))
-  (define nn (first rows-string-lengths))
+  ;; print formatter
+  (define (print-formatter e)
+    (cond
+      [(date? e) (gt:date->dd/mm/yyyy e)]
+      [(number? e) (real->decimal-string e 2)]
+      [(string? e) (if (string=? e "") "NA" e)]
+      [(list? e) (if (equal? e null) "NA" e)]
+      [else e]))
+  
+  ;; max column widths
+  (define (max-column-widths rows)
+    (map (lambda (col) (apply max (map string-length col))) (apply map list rows)))
+
+  ;; pad right
+  (define (pad-right s w)
+    (string-append s (make-string (max 0 (- w (string-length s))) #\space)))
+
+  (define rows-1 (cons (table-headers t) (table-rows t)))
+  (define rows-2 (map (lambda (ls) (map print-formatter ls)) rows-1))
+  (define rows-3 (if head (take rows-2 n) (take-right rows-2 n)))
+  (define max-widths (max-column-widths rows-3))
+  (define rows-string
+    (string-join (map (lambda (row) (string-join (map pad-right row max-widths) sep)) rows-3) "\n"))
+  (define nn (string-length (first (string-split rows-string "\n"))))
   (define ss (make-string nn #\-))
-  (string-append ss "\n" rows-string "\n" ss)
-  )
+  (string-append ss "\n" rows-string "\n" ss))
 
 ;; table print
 (define (table-print t n #:head [head #t])
   (displayln (table->string t n #:head head)))
 
 #| =================== tests =================== |#
-
 
 (module+ test
   (require rackunit
@@ -224,9 +239,7 @@
        ("2025-12-16" 31.0 45.1)
        ("2025-12-17" 30.0 40.0))))
 
-  ;;(table->string t0 3 #:head #t)
   ;;(table-print t0 3)
-  
   (check-equal? (table-read t0 "b") '(44.2 45.1 40.0))
   (check-equal? (table-read (table-create t0 "c" '(#t #f #t)) "c") '(#t #f #t))
   (check-equal? (table-filter t0 (lambda (row) (> (list-ref row 1) 31)))
@@ -241,8 +254,4 @@
   (check-true (> (first (table-shape t1)) (first (table-shape (table-dropna (table-replace t1 "" '()))))))
   ;;(table-print t1 3 #:head #f)
 
-  ;;(displayln "write function to work with table-print to find max width of each column!")
-
-  
-  ;;)
   )
