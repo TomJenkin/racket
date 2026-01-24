@@ -3,17 +3,18 @@
 (require plot
          "quant-tools.rkt")
 
-;; k-means
+;; k-means ============================================================================
+
 (define (random-matrix rows cols lo hi)
   (for/list ([i rows])
     (for/list ([j cols])
       (+ lo (* (random) (- hi lo))))))
 
 (define pts (random-matrix 2000 2 -1.0 1.0))
-(define-values (means assigns) (kmeans pts 5 2000))
+(define-values (means assigns) (kmeans pts 7 2000))
 
- 
-;; plot
+;; plot ===============================================================================
+
 (define data-1 (map append pts (map list assigns)))
 (define data-2 (map (λ (m k) (append m (list k))) means (sort (remove-duplicates assigns) <)))
 
