@@ -151,6 +151,9 @@
   ;;(displayln means-1)    ; -> centroids (means)
   ;;(displayln assigns-1)  ; -> list of cluster indices per point
 
+  (define t1 (current-inexact-milliseconds))
+  (displayln (string-append "timer: " (~r (- t1 t0) #:precision 0 #:group-sep ",") " ms"))
+
   (define (random-matrix rows cols lo hi)
     (for/list ([i rows])
       (for/list ([j cols])
@@ -159,6 +162,9 @@
   (displayln "random...")
   (define ls2 (random-matrix 2000 2 -1.0 1.0))
   (define-values (means-2 assigns-2) (kmeans-4 ls2 6 2000))
+
+  (define t2 (current-inexact-milliseconds))
+  (displayln (string-append "timer: " (~r (- t2 t1) #:precision 0 #:group-sep ",") " ms"))
   
   (displayln "scatter plot:")
 
@@ -199,6 +205,6 @@
     (plot (append renders-1 renders-2)
           #:title "K-Means Clustering"))
 
-  (define t1 (current-inexact-milliseconds))
-  (displayln (string-append "runtime: " (~r (- t1 t0) #:precision 0 #:group-sep ",") " ms")))
+  (define t3 (current-inexact-milliseconds))
+  (displayln (string-append "timer: " (~r (- t3 t2) #:precision 0 #:group-sep ",") " ms")))
 
