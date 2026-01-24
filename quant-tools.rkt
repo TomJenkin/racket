@@ -1,5 +1,27 @@
 #lang racket
 
+
+(displayln "scribble...")
+
+(require scribble/core
+         scribble/manual
+         scribble/render
+         scribble/html-render)
+
+(define doc
+  (make-part
+   #f                         ; tag-prefix
+   (list '(part "hello"))     ; tags (gives the doc an addressable tag)
+   (list "Hello")             ; title-content
+   plain                      ; style
+   null                       ; to-collect
+   (list (para "Hello, Scribble from " (tt "#lang racket") "!")) ; blocks
+   null))                     ; sub-parts
+
+(render (list doc) (list "C:/Users/tomje/Downloads/test-scribble.html") #:render-mixin render-mixin)
+
+
+
 (provide
  (contract-out
   [kmeans-1 kmeans/c]
