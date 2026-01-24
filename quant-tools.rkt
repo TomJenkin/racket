@@ -27,7 +27,7 @@
        (listof (listof real?))                 ; centroids
        (listof exact-nonnegative-integer?))))  ; assignments
 
-;; fixed iterations
+;; fixed iterations (12 lines)
 (define (kmeans-1 points k iters)
   (define (dist2 p q) (for/sum ([x p] [y q]) (sqr (- x y))))
   (define (closest p cs) (argmin (λ (c) (dist2 p c)) cs))
@@ -76,7 +76,7 @@
         new-cs
         (loop new-cs (sub1 i)))))
 
-;; returns means plus cluster group assignment for points
+;; returns means plus cluster group assignment for points (24 lines)
 (define (kmeans-4 points k iters)
   (define (dist2 p q) (for/sum ([x p] [y q]) (sqr (- x y))))
   (define (argmin-index f xs)
@@ -101,6 +101,29 @@
           (printf "k-means converged (iterations = ~a)\n" (- iters i))
           (values new-cs as))
         (loop new-cs (sub1 i)))))
+
+;; compact and with convergence exit (21 lines)
+(define (kmeans-5 points k iters)
+  (define (dist2 p q) (for/sum ([x p] [y q]) (sqr (- x y))))
+  (define (argmin-index f xs)
+    (for/fold ([bi 0] [bv +inf.0] [i 0] #:result bi) ([x xs])
+      (define v (f x))
+      (if (< v bv) (values i v (add1 i)) (values bi bv (add1 i)))))
+  (define (mean pts)
+    (define n (length pts))
+    (map (λ (col) (/ (apply + col) n)) (apply map list pts)))
+  (let loop ([cs (take points k)] [step 0])
+    (define as (map (λ (p) (argmin-index (λ (c) (dist2 p c)) cs)) points))
+    (define groups
+      (for/list ([j (in-range k)])
+        (for/list ([p points] [a as] #:when (= a j)) p)))
+    (define new-cs
+      (for/list ([c cs] [g groups])
+        (if (null? g) c (mean g))))
+    (if (or (= step iters) (equal? cs new-cs))
+        (begin (printf "k-means converged (iterations = ~a)\n" step)
+               (values new-cs as))
+        (loop new-cs (add1 step)))))
 
 #| =================== tests =================== |#
 
@@ -161,7 +184,8 @@
 
   (displayln "random...")
   (define ls2 (random-matrix 2000 2 -1.0 1.0))
-  (define-values (means-2 assigns-2) (kmeans-4 ls2 6 2000))
+  ;;(define-values (means-2 assigns-2) (kmeans-4 ls2 6 2000))
+  (define-values (means-2 assigns-2) (kmeans-5 ls2 6 2000))
 
   (define t2 (current-inexact-milliseconds))
   (displayln (string-append "timer: " (~r (- t2 t1) #:precision 0 #:group-sep ",") " ms"))
