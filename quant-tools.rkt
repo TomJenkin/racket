@@ -5,7 +5,8 @@
   ;;[kmeans-1 kmeans/c-1]
   ;;[kmeans-2 kmeans/c-1]
   ;;[kmeans-3 kmeans/c-1]
-  [kmeans-4 kmeans/c-3]))
+  ;;[kmeans-4 kmeans/c-3]
+  [kmeans kmeans/c]))
 
 (define kmeans/c-1
   (-> (non-empty-listof (listof real?)) ; points
@@ -26,6 +27,8 @@
       (values
        (listof (listof real?))                 ; centroids
        (listof exact-nonnegative-integer?))))  ; assignments
+
+(define kmeans/c kmeans/c-3)
 
 ;; fixed iterations (12 lines)
 (define (kmeans-1 points k iters)
@@ -102,28 +105,22 @@
           (values new-cs as))
         (loop new-cs (sub1 i)))))
 
-;; compact and with convergence exit (21 lines)
+;; same as kmeans-4 but more compact
 (define (kmeans-5 points k iters)
   (define (dist2 p q) (for/sum ([x p] [y q]) (sqr (- x y))))
-  (define (argmin-index f xs)
-    (for/fold ([bi 0] [bv +inf.0] [i 0] #:result bi) ([x xs])
-      (define v (f x))
-      (if (< v bv) (values i v (add1 i)) (values bi bv (add1 i)))))
-  (define (mean pts)
-    (define n (length pts))
-    (map (λ (col) (/ (apply + col) n)) (apply map list pts)))
-  (let loop ([cs (take points k)] [step 0])
-    (define as (map (λ (p) (argmin-index (λ (c) (dist2 p c)) cs)) points))
-    (define groups
-      (for/list ([j (in-range k)])
-        (for/list ([p points] [a as] #:when (= a j)) p)))
-    (define new-cs
-      (for/list ([c cs] [g groups])
-        (if (null? g) c (mean g))))
-    (if (or (= step iters) (equal? cs new-cs))
-        (begin (printf "k-means converged (iterations = ~a)\n" step)
-               (values new-cs as))
-        (loop new-cs (add1 step)))))
+  (define (closest p cs)
+    (for/fold ([b 0] [bv +inf.0] [i 0] #:result b) ([c cs])
+      (let ([v (dist2 p c)]) (if (< v bv) (values i v (add1 i)) (values b bv (add1 i))))))
+  (define (mean ps) (map (λ (xs) (/ (apply + xs) (length ps))) (apply map list ps)))
+  (let loop ([cs (take points k)] [i iters])
+    (define assns (map (λ (p) (closest p cs)) points))
+    (define groups (for/list ([j k]) (filter-map (λ (p a) (and (= a j) p)) points assns)))
+    (define new-cs (map (λ (g c) (if (null? g) c (mean g))) groups cs))
+    (if (or (zero? i) (equal? cs new-cs))
+        (begin (printf "k-means converged (iterations = ~a)\n" (- iters i)) (values new-cs assns))
+        (loop new-cs (sub1 i)))))
+
+(define kmeans kmeans-5)
 
 #| =================== tests =================== |#
 
@@ -162,15 +159,14 @@
   (define pts-2 '((1 1) (1.2 0.9) (8 8) (8.2 7.9) (0.8 1.1) (7.9 8.1)))
   ;;(define-values (means assigns) (kmeans-4 pts-2 2 20))
   (displayln "simple...")
-  (define-values (means assigns) (kmeans-4 pts-2 6 2000))
+  (define-values (means assigns) (kmeans pts-2 6 2000))
   ;;(displayln means)    ; -> centroids (means)
   ;;(displayln assigns)  ; -> list of cluster indices per point (0 or 1)
 
   ;; ======================================================================================
 
-  
   (displayln "rolling...")
-  (define-values (means-1 assigns-1) (kmeans-4 ls1 2 2000))
+  (define-values (means-1 assigns-1) (kmeans ls1 2 2000))
   ;;(displayln means-1)    ; -> centroids (means)
   ;;(displayln assigns-1)  ; -> list of cluster indices per point
 
@@ -185,7 +181,7 @@
   (displayln "random...")
   (define ls2 (random-matrix 2000 2 -1.0 1.0))
   ;;(define-values (means-2 assigns-2) (kmeans-4 ls2 6 2000))
-  (define-values (means-2 assigns-2) (kmeans-5 ls2 6 2000))
+  (define-values (means-2 assigns-2) (kmeans ls2 6 2000))
 
   (define t2 (current-inexact-milliseconds))
   (displayln (string-append "timer: " (~r (- t2 t1) #:precision 0 #:group-sep ",") " ms"))
