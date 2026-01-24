@@ -1,60 +1,31 @@
 #lang racket
 
-
-(displayln "scribble...")
-
-(require scribble/core
-         scribble/manual
-         scribble/render
-         scribble/html-render)
-
-(define doc
-  (make-part
-   #f                         ; tag-prefix
-   (list '(part "hello"))     ; tags (gives the doc an addressable tag)
-   (list "Hello")             ; title-content
-   plain                      ; style
-   null                       ; to-collect
-   (list (para "Hello, Scribble from " (tt "#lang racket") "!")) ; blocks
-   null))                     ; sub-parts
-
-(render (list doc) (list "C:/Users/tomje/Downloads/test-scribble.html") #:render-mixin render-mixin)
-
-
-
 (provide
  (contract-out
-  [kmeans-1 kmeans/c]
-  [kmeans-2 kmeans/c]
-  [kmeans-3 kmeans/c]
+  [kmeans-1 kmeans/c-1]
+  [kmeans-2 kmeans/c-1]
+  [kmeans-3 kmeans/c-1]
   [kmeans-4 kmeans/c-3]))
 
-;; kmeans/c :
-;;   points : non-empty list of N-dimensional real-valued points
-;;   k      : number of clusters
-;;   iters  : number of iterations
-;;   ->     : list of cluster centroids
-(define kmeans/c
-  (-> (non-empty-listof (listof real?))
-      exact-nonnegative-integer?
-      exact-nonnegative-integer?
-      (listof (listof real?))))
+(define kmeans/c-1
+  (-> (non-empty-listof (listof real?)) ; points
+      exact-nonnegative-integer?        ; k
+      exact-nonnegative-integer?        ; iters
+      (listof (listof real?))))         ; centroids
 
-#|
 (define kmeans/c-2
-  (-> (and/c (listof (listof real?)) (not/c null?))
-      exact-nonnegative-integer?
-      exact-nonnegative-integer?
-      (listof (listof real?))))
-|#
+  (-> (and/c (listof (listof real?)) (not/c null?))  ; points
+      exact-nonnegative-integer?                     ; k
+      exact-nonnegative-integer?                     ; iters
+      (listof (listof real?))))                      ; centroids
 
 (define kmeans/c-3
-  (-> (non-empty-listof (listof real?))   ; points
-      exact-nonnegative-integer?          ; k
-      exact-nonnegative-integer?          ; iters
+  (-> (non-empty-listof (listof real?))        ; points
+      exact-nonnegative-integer?               ; k
+      exact-nonnegative-integer?               ; iters
       (values
-       (listof (listof real?))            ; centroids
-       (listof exact-nonnegative-integer?)))) ; assignments
+       (listof (listof real?))                 ; centroids
+       (listof exact-nonnegative-integer?))))  ; assignments
 
 ;; fixed iterations
 (define (kmeans-1 points k iters)
@@ -72,7 +43,7 @@
 
 ;; fixed iterations with contract
 (define/contract (kmeans-2 points k iters)
-  kmeans/c
+  kmeans/c-1
   (define (dist2 p q) (for/sum ([x p] [y q]) (sqr (- x y))))
   (define (closest p cs) (argmin (λ (c) (dist2 p c)) cs))
   (define (mean pts)
@@ -134,9 +105,8 @@
 
 (module+ test
 
-  ;;(provide ls1)
-  
-  (require rackunit
+  (require plot
+           rackunit
            racket/format
            (prefix-in gt: "gen-tools.rkt")
            (prefix-in dt: "data-table.rkt")
@@ -151,7 +121,7 @@
   (define fn (lambda (e) (~r e #:precision 2)))
   ;;(process-2d fn aa)
 
-  (displayln "spx for methods 1-3...")
+  ;;(displayln "spx for methods 1-3...")
   (define dt1 sd:data-sp500)
   (define dt2 (dt:table-create dt1 "rolling-tail" (gt:rolling (lambda (e) e) 2 (dt:table-read dt1 "close"))))
   (define dt3 (dt:table-dropna dt2 #:na null))
@@ -161,19 +131,65 @@
   ;;(define res-1 (kmeans-1 ls1 7 200))
   ;;(define res-1 (kmeans-2 ls1 7 200))
   (define res-1 (kmeans-3 ls1 7 200))
-  (gt:list-of-lists-of-numbers-to-strings res-1 #:decimal-places 1)
+  ;;(gt:list-of-lists-of-numbers-to-strings res-1 #:decimal-places 1)
   ;;ls2
 
-  (displayln "simple example...")
+  ;;(displayln "simple example...")
   (define pts-2 '((1 1) (1.2 0.9) (8 8) (8.2 7.9) (0.8 1.1) (7.9 8.1)))
   (define-values (means assigns) (kmeans-4 pts-2 2 20))
-  (displayln means)    ; -> centroids (means)
-  (displayln assigns)  ; -> list of cluster indices per point (0 or 1)
+  ;;(displayln means)    ; -> centroids (means)
+  ;;(displayln assigns)  ; -> list of cluster indices per point (0 or 1)
 
   (displayln "multiple returns...")
-  (define-values (means-1 assigns-1) (kmeans-4 ls1 7 200))
-  (displayln means-1)    ; -> centroids (means)
-  (displayln assigns-1)  ; -> list of cluster indices per point
+  (define-values (means-1 assigns-1) (kmeans-4 ls1 2 200))
+  ;;(displayln means-1)    ; -> centroids (means)
+  ;;(displayln assigns-1)  ; -> list of cluster indices per point
+
+  (define (random-matrix rows cols lo hi)
+    (for/list ([i rows])
+      (for/list ([j cols])
+        (+ lo (* (random) (- hi lo))))))
+
+  (define ls2 (random-matrix 2000 2 -1.0 1.0))
+  (define-values (means-2 assigns-2) (kmeans-4 ls2 6 200))
   
+
+  (displayln "plotting scatter...")
+
+  ;;(define data-1 (map append ls1 (map list assigns-1)))
+  ;;(define data-2 (map (λ (m k) (append m (list k))) means-1 (sort (remove-duplicates assigns-1) <)))
+
+  (define data-1 (map append ls2 (map list assigns-2)))
+  (define data-2 (map (λ (m k) (append m (list k))) means-2 (sort (remove-duplicates assigns-2) <)))
+
+  (define (group-by-cluster data)
+    (for/fold ([h (hash)]) ([p data])
+      (define k (third p))
+      (hash-update h k (λ (acc) (cons p acc)) '())))
+
+  (define (renders-for data sym size alpha)
+    (define groups (group-by-cluster data))
+    (for/list ([(k ps) (in-hash groups)])
+      (points
+       (for/list ([p (reverse ps)])
+         (vector (first p) (second p)))
+       #:sym sym
+       #:size size
+       #:alpha alpha
+       #:color k)))
+
+  ;; --- build renderers for both datasets ---
+  (define renders-1 (renders-for data-1 'fullcircle 5 0.5)) ; circles
+  (define renders-2 (renders-for data-2 'fullsquare 20 1)) ; sqyares
+
+  ;; --- plot (data-2 drawn on top because it comes last) ---
+  (parameterize ([plot-x-label "x"]
+                 [plot-y-label "y"]
+                 [plot-width 500]
+                 [plot-height 450]
+                 [plot-aspect-ratio #f])
+    (plot (append renders-1 renders-2)))
+
   (define t1 (current-inexact-milliseconds))
   (displayln (string-append "runtime: " (~r (- t1 t0) #:precision 0 #:group-sep ",") " ms")))
+
