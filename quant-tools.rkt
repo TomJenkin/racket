@@ -97,7 +97,9 @@
       (for/list ([j (in-range k)])
         (if (null? (list-ref groups j)) (list-ref cs j) (mean (list-ref groups j)))))
     (if (or (zero? i) (equal? cs new-cs))
-        (values new-cs as)
+        (begin
+          (printf "k-means converged (iterations = ~a)\n" (- iters i))
+          (values new-cs as))
         (loop new-cs (sub1 i)))))
 
 
@@ -136,12 +138,17 @@
 
   ;;(displayln "simple example...")
   (define pts-2 '((1 1) (1.2 0.9) (8 8) (8.2 7.9) (0.8 1.1) (7.9 8.1)))
-  (define-values (means assigns) (kmeans-4 pts-2 2 20))
+  ;;(define-values (means assigns) (kmeans-4 pts-2 2 20))
+  (displayln "simple...")
+  (define-values (means assigns) (kmeans-4 pts-2 6 2000))
   ;;(displayln means)    ; -> centroids (means)
   ;;(displayln assigns)  ; -> list of cluster indices per point (0 or 1)
 
-  (displayln "multiple returns...")
-  (define-values (means-1 assigns-1) (kmeans-4 ls1 2 200))
+  ;; ======================================================================================
+
+  
+  (displayln "rolling...")
+  (define-values (means-1 assigns-1) (kmeans-4 ls1 2 2000))
   ;;(displayln means-1)    ; -> centroids (means)
   ;;(displayln assigns-1)  ; -> list of cluster indices per point
 
@@ -150,11 +157,11 @@
       (for/list ([j cols])
         (+ lo (* (random) (- hi lo))))))
 
+  (displayln "random...")
   (define ls2 (random-matrix 2000 2 -1.0 1.0))
-  (define-values (means-2 assigns-2) (kmeans-4 ls2 6 200))
+  (define-values (means-2 assigns-2) (kmeans-4 ls2 6 2000))
   
-
-  (displayln "plotting scatter...")
+  (displayln "scatter plot:")
 
   ;;(define data-1 (map append ls1 (map list assigns-1)))
   ;;(define data-2 (map (λ (m k) (append m (list k))) means-1 (sort (remove-duplicates assigns-1) <)))
