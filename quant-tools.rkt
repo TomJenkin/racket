@@ -2,9 +2,9 @@
 
 (provide
  (contract-out
-  [kmeans-1 kmeans/c-1]
-  [kmeans-2 kmeans/c-1]
-  [kmeans-3 kmeans/c-1]
+  ;;[kmeans-1 kmeans/c-1]
+  ;;[kmeans-2 kmeans/c-1]
+  ;;[kmeans-3 kmeans/c-1]
   [kmeans-4 kmeans/c-3]))
 
 (define kmeans/c-1
@@ -163,9 +163,11 @@
   
   (displayln "scatter plot:")
 
+  ;; from rolling
   ;;(define data-1 (map append ls1 (map list assigns-1)))
   ;;(define data-2 (map (λ (m k) (append m (list k))) means-1 (sort (remove-duplicates assigns-1) <)))
 
+  ;; from random
   (define data-1 (map append ls2 (map list assigns-2)))
   (define data-2 (map (λ (m k) (append m (list k))) means-2 (sort (remove-duplicates assigns-2) <)))
 
@@ -186,8 +188,8 @@
        #:color k)))
 
   ;; --- build renderers for both datasets ---
-  (define renders-1 (renders-for data-1 'fullcircle 5 0.5)) ; circles
-  (define renders-2 (renders-for data-2 'fullsquare 20 1)) ; sqyares
+  (define renders-1 (renders-for data-1 'fullcircle 5 0.5))
+  (define renders-2 (renders-for data-2 'fullsquare 15 1))
 
   ;; --- plot (data-2 drawn on top because it comes last) ---
   (parameterize ([plot-x-label "x"]
@@ -195,7 +197,8 @@
                  [plot-width 500]
                  [plot-height 450]
                  [plot-aspect-ratio #f])
-    (plot (append renders-1 renders-2)))
+    (plot (append renders-1 renders-2)
+          #:title "K-Means Clustering"))
 
   (define t1 (current-inexact-milliseconds))
   (displayln (string-append "runtime: " (~r (- t1 t0) #:precision 0 #:group-sep ",") " ms")))
