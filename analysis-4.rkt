@@ -57,12 +57,19 @@
   (define p0 (first ls))
   (map (λ (p) (/ (- p p0) p0)) ls))
 
+(define (normalise ls)
+  (define p0 (first ls))
+  (map (λ (p) (/ p p0)) ls))
+
+;;(define fn cum-rel-change)
+(define fn normalise)
+
 (define dt1 sd:data-sp500)
 (dt:table-print dt1 5 #:head #t)
 (define r1 (gt:rolling (λ (e) e) 10 (dt:table-read dt1 "close")))
 (define dt2 (dt:table-dropna (dt:table-create dt1 "tail" r1)))
 (define r2 (dt:table-read dt2 "tail"))
-(define r3 (map cum-rel-change r2))
+(define r3 (map fn r2))
 (define dt3 (dt:table-create dt2 "tail-rel" r3))
 (define r4 (dt:table-read dt3 "tail-rel"))
 (define-values (means-2 assigns-2) (qt:kmeans r4 7 2000))
@@ -93,7 +100,9 @@
       (define pts
         (for/list ([y ys] [x (in-naturals 0)])
           (vector x y)))
-      (lines pts #:label (format "series ~a" i))))
+      (lines pts
+             ;;#:label (format "series ~a" i)
+             )))
 
   (parameterize ([plot-x-label "Index"]
                  [plot-y-label "Value"]
