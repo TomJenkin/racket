@@ -23,11 +23,11 @@
      (env var-name)]
     
     ;; λ-expression: create a function value
-    [`(lambda (,param) ,body)
+    [`(λ (,param) ,body)
      ;; When called, evaluate body in extended environment
-     (lambda (argument)
+     (λ (argument)
        (evaluate body
-                 (lambda (var)
+                 (λ (var)
                    (if (equal? var param)
                        argument      ; New binding for param
                        (env var)))))] ; Existing bindings
@@ -44,17 +44,9 @@
       'done
       (count-down (- n 1))))
 
-#| 
-   ;; A tiny pipeline macro named pipe
-   (define-syntax pipe
-     (syntax-rules ()
-       [(_ x) x]
-       [(_ x f more ...) (pipe (f x) more ...)]))
- |#
-
 ;; derivative of function
 (define (derivative f #:h [h 1e-6])
-  (lambda (x)
+  (λ (x)
     (/ (- (f (+ x h))
           (f (- x h)))
        (* 2 h))))
@@ -67,8 +59,10 @@
   (require rackunit
            math/statistics)
 
+  ;; self evaluation
+  
   (define empty-env
-    (lambda (var)
+    (λ (var)
       (error 'evaluate "unbound variable: ~a" var)))
 
   (define (test-eval expr)
@@ -78,9 +72,10 @@
     (displayln (evaluate expr empty-env))
     (displayln "----"))
 
-  (test-eval '((lambda (x) x) 42)) ;; expected: 42
+  (test-eval '((λ (x) x) 42)) ;; expected: 42
+  (test-eval '((λ (x) 5) 999)) ;; expected: 5
 
-  
-
+  (check-equal? (evaluate '((λ (x) x) 42) empty-env) 42)
+  (check-equal? (evaluate '((λ (x) 5) 999) empty-env) 5)
   
   )
