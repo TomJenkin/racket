@@ -1,6 +1,7 @@
 #lang racket
 
 (require plot
+         math/statistics
          racket/date
          (prefix-in dt: "data-table.rkt")
          (prefix-in gt: "gen-tools.rkt")
@@ -61,9 +62,57 @@
   (define p0 (first ls))
   (map (λ (p) (/ p p0)) ls))
 
-;;(define fn cum-rel-change)
-(define fn normalise)
+(define (abs-diffs ls)
+  (for/list ([a ls] [b (rest ls)])
+    (abs (- b a))))
 
+(define (scale-0-1 ls)
+  (define mn (apply min ls))
+  (define mx (apply max ls))
+  (define range (- mx mn))
+  (map (λ (x) (/ (- x mn) range)) ls))
+
+(define (scale-zscore ls)
+  (define μ (mean ls))
+  (define σ (stddev ls))
+  (if (zero? σ)
+      (make-list (length ls) 0.0)
+      (map (λ (x) (/ (- x μ) σ)) ls)))
+
+(define (dist-stats lss)
+  (define ls (scale-0-1 lss))
+  ;;(define ls (scale-zscore lss))
+  (list
+   (apply min ls)
+   (apply max ls)
+   (mean ls)
+   (stddev ls)
+   (variance ls)
+   (skewness ls)
+   (kurtosis ls)
+   ;;(median ls)
+   ;;(mode ls)
+   ;;(geometric-mean ls)
+
+   ;; sort out and check proper way to calculate quantiles. this may be all you need??
+   
+   (quantile 0.05 < ls)
+   (quantile 0.1 < ls)
+   (quantile 0.25 < ls)
+
+   (quantile 0.75 > ls)
+   (quantile 0.9 > ls)
+   (quantile 0.95 > ls)
+   
+   ;;(percentile ls 0.25)
+   ))
+  
+;;(define fn cum-rel-change)
+;;(define fn normalise)
+;;(define fn abs-diffs)
+(define fn dist-stats)
+
+(define n-clusters 12)
 (define dt1 sd:data-sp500)
 (dt:table-print dt1 5 #:head #t)
 (define r1 (gt:rolling (λ (e) e) 10 (dt:table-read dt1 "close")))
@@ -72,7 +121,7 @@
 (define r3 (map fn r2))
 (define dt3 (dt:table-create dt2 "tail-rel" r3))
 (define r4 (dt:table-read dt3 "tail-rel"))
-(define-values (means-2 assigns-2) (qt:kmeans r4 7 2000))
+(define-values (means-2 assigns-2) (qt:kmeans r4 n-clusters 5000))
 (define dt4 (dt:table-create dt3 "label" assigns-2))
 (define dates-1 (dt:table-read dt4 "date"))
 (define values-1 (dt:table-read dt4 "label"))
@@ -115,6 +164,13 @@
 
 (plot-many-series means-2)
 
+;; testing
+
+;; note: the timeseries of labels should be moderately stationary. not drifting
+
+(displayln "testing...")
+(define aa (range 100 500 10))
+(dist-stats aa)
 
 
 (displayln "done!")
