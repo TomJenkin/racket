@@ -1,12 +1,63 @@
 #lang racket
 
 (require plot
+         rackunit
          math/statistics
          racket/date
          (prefix-in dt: "data-table.rkt")
          (prefix-in gt: "gen-tools.rkt")
          (prefix-in qt: "quant-tools.rkt")
          (prefix-in sd: "sample-data.rkt"))
+
+;; scaling
+(define (normalize-01 xs)
+  (define mn (apply min xs))
+  (define mx (apply max xs))
+  (define range (- mx mn))
+  (if (zero? range)
+      (map (λ (_) 0.0) xs)   ; all values identical → all zeros
+      (map (λ (x) (/ (- x mn) range)) xs)))
+
+;; haar wavelet
+(define (haar1 xs)
+  (define sqrt2 (sqrt 2))
+  (define (step lst accA accD)
+    (match lst
+      [(list a b rest ...)
+       (define avg (/ (+ a b) sqrt2))
+       (define diff (/ (- a b) sqrt2))
+       (step rest
+             (append accA (list avg))
+             (append accD (list diff)))]
+      ['() (append accA accD)]
+      [_ (error "List length must be even")]))
+  (step xs '() '()))
+
+(define (inv-haar1 coeffs)
+  (define sqrt2 (sqrt 2))
+  (define n (length coeffs))
+  (unless (even? n)
+    (error "Coefficient list length must be even"))
+  (define half (/ n 2))
+  (define As (take coeffs half))
+  (define Ds (drop coeffs half))
+  (define (step a-list d-list acc)
+    (match (list a-list d-list)
+      [(list (list a restA ...) (list d restD ...))
+       (define x0 (/ (+ a d) sqrt2))
+       (define x1 (/ (- a d) sqrt2))
+       (step restA restD (append acc (list x0 x1)))]
+      [(list '() '()) acc]
+      [_ (error "Mismatched coefficient halves")]))
+  (step As Ds '()))
+
+(test-case "haar inverse check"
+  (define (round-10 ls) (gt:round-n ls 10)) 
+  ;;(define fn1 (compose (λ (ls) (gt:round-n ls 10)) inv-haar1 haar1))
+  (define fn1 (compose round-10 inv-haar1 haar1))
+  (define fn2 (λ (ls) (map exact->inexact ls)))
+  (define xs '(100 101 99 102 100 101 99 103))
+  (check-equal? (fn1 xs) (fn2 xs)))
 
 
 (when #f ; k-means ==========================================================
@@ -110,12 +161,15 @@
 ;;(define fn cum-rel-change)
 ;;(define fn normalise)
 ;;(define fn abs-diffs)
-(define fn dist-stats)
+;;(define fn dist-stats)
+;;(define fn haar1)
+(define fn (compose haar1 normalize-01))
 
-(define n-clusters 12)
+(define rolling-win-length 60)
+(define n-clusters 6)
 (define dt1 sd:data-sp500)
 (dt:table-print dt1 5 #:head #t)
-(define r1 (gt:rolling (λ (e) e) 10 (dt:table-read dt1 "close")))
+(define r1 (gt:rolling (λ (e) e) rolling-win-length (dt:table-read dt1 "close")))
 (define dt2 (dt:table-dropna (dt:table-create dt1 "tail" r1)))
 (define r2 (dt:table-read dt2 "tail"))
 (define r3 (map fn r2))
