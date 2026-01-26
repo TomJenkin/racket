@@ -52,12 +52,18 @@
   (step As Ds '()))
 
 (test-case "haar inverse check"
-  (define (round-10 ls) (gt:round-n ls 10)) 
-  ;;(define fn1 (compose (λ (ls) (gt:round-n ls 10)) inv-haar1 haar1))
-  (define fn1 (compose round-10 inv-haar1 haar1))
-  (define fn2 (λ (ls) (map exact->inexact ls)))
-  (define xs '(100 101 99 102 100 101 99 103))
-  (check-equal? (fn1 xs) (fn2 xs)))
+           (displayln "at some point check zero the minor coeffs and recover near xs")
+           (define (round-10 ls) (gt:round-n ls 10)) 
+           (define fn1 (compose round-10 inv-haar1 haar1))
+           (define fn2 (λ (ls) (map exact->inexact ls)))
+           (define xs '(100 101 99 102 100 101 99 103))
+           (check-equal? (fn1 xs) (fn2 xs)))
+
+
+(test-case "list shift check"
+           (define xs (range 0 10))
+           (define ys (gt:list-shift xs 2))
+           (check-equal? ys '(() () 0 1 2 3 4 5 6 7)))
 
 
 (when #f ; k-means ==========================================================
@@ -180,6 +186,9 @@
 (define dates-1 (dt:table-read dt4 "date"))
 (define values-1 (dt:table-read dt4 "label"))
 ;;(dt:table-print dt4 5 #:head #t)
+
+;; do a simple test of label state vs. next move up or down. can be simple table off counts.
+;; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ;; plot cluster groups/labels
 (define (plot-dates-values dates values)
