@@ -48,21 +48,23 @@
   (for/list ([c (in-list coeffs)] [i (in-naturals)])
     (if (set-member? keep i) c 0.0)))
 
-(time (test-case "haar tests"
-           ; recovery tests
-           (define (round-10 ls) (gt:round-n ls 10)) 
-           (define fn1 (compose round-10 haar-inv haar))
-           ;;(define xs '(100 101 99 102 100 101 99 103))
-           (define xs (for/list ([i 1000]) (+ 100 (random 21))))
-           (define xss (map exact->inexact xs))
-           (check-equal? (fn1 xs) xss)
-           (define ys (haar xs))
-           (check-equal? (round-10 (haar-inv (haar-slice ys 0 1))) (map exact->inexact xs))
-           ; check that hp + lp == original series
-           (for/list ([e '(0.25 0.5 0.75)])
-             (define zs (haar-inv (haar-slice ys 0 e)))
-             (define ws (haar-inv (haar-slice ys e 1)))
-             (define es (round-10 (map + ws zs)))
-             (define xss (map exact->inexact xs))
-             (check-equal? es xss))
-           (displayln (string-append module-name ": passed tests"))))
+(time
+ (test-case
+  "haar tests"
+  ; recovery tests
+  (define (round-10 ls) (gt:round-n ls 10)) 
+  (define fn1 (compose round-10 haar-inv haar))
+  ;;(define xs '(100 101 99 102 100 101 99 103))
+  (define xs (for/list ([i 1000]) (+ 100 (random 21))))
+  (define xss (map exact->inexact xs))
+  (check-equal? (fn1 xs) xss)
+  (define ys (haar xs))
+  (check-equal? (round-10 (haar-inv (haar-slice ys 0 1))) (map exact->inexact xs))
+  ; check that hp + lp == original series
+  (for/list ([e '(0.25 0.5 0.75)])
+    (define zs (haar-inv (haar-slice ys 0 e)))
+    (define ws (haar-inv (haar-slice ys e 1)))
+    (define es (round-10 (map + ws zs)))
+    (define xss (map exact->inexact xs))
+    (check-equal? es xss))
+  (displayln (string-append module-name ": passed tests"))))
