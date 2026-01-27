@@ -1,7 +1,6 @@
 #lang racket
 
 (require plot
-         ;;racket/gui/base
          rackunit
          syntax/location
          (prefix-in gt: "gen-tools.rkt"))
@@ -88,7 +87,7 @@
   ;;(define xs (map exact->inexact xss))
   (define hs (haar xs))
 
-  (define cut 0.8)
+  (define cut 0.98)
   
   (define fs1 (haar-inv (haar-filter hs 0 cut)))
 
@@ -103,10 +102,13 @@
     ;;(plot (lines (map vector (range (length hs)) hs)))
 
     (plot (list 
-           (lines (map vector (range (length xs)) xs))
+           ;;(lines (map vector (range (length xs)) xs))
            (lines (map vector (range (length xs)) fs1))
-           (lines (map vector (range (length xs)) fs2))))
+           ;;(lines (map vector (range (length xs)) fs2))
+           ))
 
+
+    
 
     )
   
