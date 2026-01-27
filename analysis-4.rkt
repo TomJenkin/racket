@@ -18,6 +18,7 @@
       (map (λ (_) 0.0) xs)   ; all values identical → all zeros
       (map (λ (x) (/ (- x mn) range)) xs)))
 
+#|
 ;; haar wavelet
 (define (haar1 xs)
   (define sqrt2 (sqrt 2))
@@ -33,6 +34,7 @@
       [_ (error "List length must be even")]))
   (step xs '() '()))
 
+;; haar inverse
 (define (inv-haar1 coeffs)
   (define sqrt2 (sqrt 2))
   (define n (length coeffs))
@@ -50,6 +52,51 @@
       [(list '() '()) acc]
       [_ (error "Mismatched coefficient halves")]))
   (step As Ds '()))
+|#
+
+;; haar transform
+(define (haar1 xs)
+  (define n (length xs))
+  (unless (even? n) (error 'haar1 "list length must be even"))
+  (define k (/ 1.0 (sqrt 2.0)))
+  (define As (for/list ([i (in-range 0 n 2)])
+               (* k (+ (list-ref xs i) (list-ref xs (add1 i))))))
+  (define Ds (for/list ([i (in-range 0 n 2)])
+               (* k (- (list-ref xs i) (list-ref xs (add1 i))))))
+  (append As Ds))
+
+;; inverse haar
+(define (inv-haar1 coeffs)
+  (define n (length coeffs))
+  (unless (even? n) (error 'inv-haar1 "coeff length must be even"))
+  (define k (/ 1.0 (sqrt 2.0)))
+  (define half (quotient n 2))
+  (define As (take coeffs half))
+  (define Ds (drop coeffs half))
+  (append*
+   (for/list ([a (in-list As)] [d (in-list Ds)])
+     (list (* k (+ a d))
+           (* k (- a d))))))
+
+;; perhaps not as good as soft
+(define (haar1-denoise-hard coeffs T)
+  (define n (length coeffs))
+  (unless (even? n) (error 'haar1-denoise-hard "coeff length must be even"))
+  (define h (quotient n 2))
+  (append (take coeffs h)
+          (map (λ (d) (if (< (abs d) T) 0.0 d))
+               (drop coeffs h))))
+
+;; usually better than hard
+(define (haar1-denoise-soft coeffs T)
+  (define n (length coeffs))
+  (unless (even? n) (error 'haar1-denoise-soft "coeff length must be even"))
+  (define h (quotient n 2))
+  (define (soft d)
+    (define a (abs d))
+    (cond [(<= a T) 0.0]
+          [else (* (if (negative? d) -1.0 1.0) (- a T))]))
+  (append (take coeffs h) (map soft (drop coeffs h))))
 
 (test-case "haar inverse check"
            (displayln "at some point check zero the minor coeffs and recover near xs")
@@ -64,6 +111,28 @@
            (define xs (range 0 10))
            (define ys (gt:list-shift xs 2))
            (check-equal? ys '(() () 0 1 2 3 4 5 6 7)))
+
+
+(define xs '(10 7.5 5 2.5 0 -2.5 -5 -10))
+
+xs
+
+(define ys (gt:round-n (haar1 xs) 2))
+
+ys
+
+(define ys-1 '(14.14 14.14 14.14 14.14 0 0 0 0))
+(define ys-2 '(14.14 0 0 0 0 0 0 0))
+(define ys-3 '(0 14.14 0 0 0 0 0 0))
+(define ys-4 '(0 0 14.14 0 0 0 0 0))
+(define ys-5 '(0 0 0 14.14 0 0 0 0))
+
+(gt:round-n (inv-haar1 ys-1) 2)
+(gt:round-n (inv-haar1 ys-2) 2)
+(gt:round-n (inv-haar1 ys-3) 2)
+(gt:round-n (inv-haar1 ys-4) 2)
+(gt:round-n (inv-haar1 ys-5) 2)
+
 
 
 (when #f ; k-means ==========================================================
@@ -171,7 +240,7 @@
 ;;(define fn haar1)
 (define fn (compose haar1 normalize-01))
 
-(define rolling-win-length 60)
+(define rolling-win-length 20)
 (define n-clusters 6)
 (define dt1 sd:data-sp500)
 (dt:table-print dt1 5 #:head #t)

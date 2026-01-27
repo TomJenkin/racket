@@ -2,18 +2,17 @@
 
 (provide evaluate
          count-down
-         ;;pipe
          derivative)
 
-;; ============================================
-;; A minimal, readable λ-calculus interpreter
-;; ============================================
+;; ================================================
+;; A minimal, readable λ-calculus style interpreter
+;; ================================================
 
 ;; evaluate :: Expression × Environment → Value
 (define (evaluate exp env)
   (match exp
 
-    ;; Literal values evaluate to themselves
+    ;; Literal values evaluate to themselves (not in pure lambda calculus I think)
     [(? number? n) n]
     [(? boolean? b) b]
     [(? string? s) s]
@@ -77,5 +76,16 @@
 
   (check-equal? (evaluate '((λ (x) x) 42) empty-env) 42)
   (check-equal? (evaluate '((λ (x) 5) 999) empty-env) 5)
-  
+
+  (test-case "lambda test"
+             (define fn '(λ (x) x))
+             (evaluate fn empty-env)
+             (check-equal? 1 1))
+
+  ;; native eval
+  (test-case ""
+             (define ns (make-base-namespace))
+             (check-equal? (eval '((λ (x) x) 'something) ns) 'something))
+
+ 
   )

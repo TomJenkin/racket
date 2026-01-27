@@ -1,6 +1,7 @@
 #lang racket
 
-(require (prefix-in gt: "gen-tools.rkt"))
+(require (prefix-in gt: "gen-tools.rkt")
+         (prefix-in qt: "quant-tools.rkt"))
 
 
 (define ls (range 22 30))
@@ -15,8 +16,6 @@
   (list e m n)
   2)
 
-
-
 ;; data vs. code
 
 (define data (quote (+ 1 (* 2 3))))
@@ -24,3 +23,7 @@ data
 
 (define ns (make-base-namespace))
 (eval data ns)
+
+
+
+
