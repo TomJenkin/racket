@@ -42,38 +42,38 @@
             suf))
   (for/fold ([s xs]) ([p (in-range 1 (add1 P))]) (step s p)))
 
-
-(define (cumsum xs)
-  (reverse
-   (car (for/fold ([acc '()] [s 0.0]) ([x xs])
-          (define s2 (+ s x))
-          (values (cons s2 acc) s2)))))
-
-;; haar-filter-1d : (listof number) real real -> (listof number)
-(define (haar-filter-1d xs low high)
-  (unless (and (real? low) (real? high) (<= 0.0 low high 1.0))
-    (error 'haar-filter-1d "need 0<=low<=high<=1, got low=~a high=~a" low high))
-
-  ;; rows = (idx val abs)
-  (define rows (for/list ([x xs] [i (in-naturals)])
-                 (list i x (abs x))))
-  (define tot (apply + (map third rows)))
-
-  (if (zero? tot)
-      xs
-      (let* ([sorted (sort rows < #:key third)]              ; abs ascending
-             [cms    (map (λ (u) (min 1.0 (/ u tot)))        ; clamp for rounding
-                          (cumsum (map third sorted)))]
-             [kept   (map (λ (r cm)
-                            (list (first r)
-                                  (if (and (> cm low) (<= cm high))
-                                      (second r)
-                                      0.0)))
-                          sorted cms)]
-             [back   (sort kept < #:key first)])
-        (map second back))))
-
-
+#| 
+   (define (cumsum xs)
+     (reverse
+      (car (for/fold ([acc '()] [s 0.0]) ([x xs])
+             (define s2 (+ s x))
+             (values (cons s2 acc) s2)))))
+   
+   ;; haar-filter-1d : (listof number) real real -> (listof number)
+   (define (haar-filter-1d xs low high)
+     (unless (and (real? low) (real? high) (<= 0.0 low high 1.0))
+       (error 'haar-filter-1d "need 0<=low<=high<=1, got low=~a high=~a" low high))
+   
+     ;; rows = (idx val abs)
+     (define rows (for/list ([x xs] [i (in-naturals)])
+                    (list i x (abs x))))
+     (define tot (apply + (map third rows)))
+   
+     (if (zero? tot)
+         xs
+         (let* ([sorted (sort rows < #:key third)]              ; abs ascending
+                [cms    (map (λ (u) (min 1.0 (/ u tot)))        ; clamp for rounding
+                             (cumsum (map third sorted)))]
+                [kept   (map (λ (r cm)
+                               (list (first r)
+                                     (if (and (> cm low) (<= cm high))
+                                         (second r)
+                                         0.0)))
+                             sorted cms)]
+                [back   (sort kept < #:key first)])
+           (map second back))))
+   
+ |#
 
 (random-seed 0)
 (define (random-walk n [start 100])
@@ -86,5 +86,5 @@
 (define xs (random-walk 1024 100))
 
 (define hs (haar xs))
-(define hs2 (haar-filter-1d hs 0.20 1.00))
-(define xs2 (haar-inv hs2))
+;;(define hs2 (haar-filter-1d hs 0.20 1.00))
+;;(define xs2 (haar-inv hs2))

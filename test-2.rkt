@@ -1,6 +1,7 @@
 #lang racket
 
-(require (prefix-in gt: "gen-tools.rkt")
+(require json
+         (prefix-in gt: "gen-tools.rkt")
          (prefix-in qt: "quant-tools.rkt"))
 
 
@@ -24,6 +25,7 @@ data
 (define ns (make-base-namespace))
 (eval data ns)
 
+(define a 1)
+(define b 3)
 
-
-
+(string-replace (jsexpr->string (hash 'a a 'b b)) "\"" "\"\"")
