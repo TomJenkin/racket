@@ -2,10 +2,13 @@
 
 (require json)
 
-(provide call-python-fn)
+(provide call-python-fn
+         list-of-lists->list)
 
 (define python-exe "C:\\Users\\tomje\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe")
 (define python-module "C:\\Users\\tomje\\Documents\\Code\\nets\\dispatcher.py")
+
+(define (list-of-lists->list ls) (map (lambda (e) (first e)) ls))
 
 (define (call-python-fn data
                         #:python [python python-exe]
