@@ -35,46 +35,18 @@
   (define result (string->jsexpr stdout))
   result)
 
+
 (module+ test
 
   (require rackunit syntax/location)
 
-
-  ;; in wrapper module:
-
-  (define (kmeans22 data n-clusters)
-
-    ;; change to let !!!!!!!!!!!!!!!!!!!!!!!!!!!
-    (define args  (list 'fn))
-    (define kwargs (hash 'data data 'n-clusters n-clusters))
-    
-    33)
-
-  
-
-  (test-case
-   "kmeans interop"
-   
-   ;;(define data '((1 2) (3 4) (5 6) (7 8)))
-
-   (define args (for/list ([a (range 0 20)] [b (range 0 20)])
-                  (list a b)))
-
-   (define kwargs (hash 'n_clusters 3))
-
-   ;; define conversion function
-   (define (fn-data fn #:args [args (list)] #:kwargs [kwargs (hash)])
-     (hash 'fn fn 'args (list args) 'kwargs kwargs))
-  
-   (define ps (fn-data "kmeans" #:args args #:kwargs kwargs))
-   (displayln ps)
-   (define rs (call-python-fn ps))
-   (define rs1 (hash-ref rs 'results))
-   (displayln (first rs1))
-   (displayln (second rs1))
-   )
-  
-  ;; !! do a speed test into a dummy .py file with no libraries to check base speed of interop/python
+  (when #t
+    (time
+     ; when no costly imports in python file then much faster run time!
+     (define params (hash 'fn "dummy" 'args (list '(1 2 3 "hello")) 'kwargs (hash 'b 35)))
+     (define script "C:\\Users\\tomje\\Documents\\Code\\nets\\dispatcher_simple.py")
+     (define result (hash-ref (call-python-fn params #:script script) 'results))
+     (check-equal? result '((1 2 3 "hello") 35))))
   
   (when #f
     (time
