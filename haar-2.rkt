@@ -2,8 +2,7 @@
 
 ;; keep this module !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-(require rackunit
-         racket/list
+(require racket/list
          (prefix-in pc: "python-caller-subprocess.rkt")
          (prefix-in gt: "gen-tools.rkt"))
 
@@ -81,47 +80,53 @@
    
  |#
 
-(random-seed 0)
-(define (random-walk n [start 100])
-  (reverse
-   (for/fold ([path (list start)]) ([i (in-range (sub1 n))])
-     (define step (if (zero? (random 2)) -1 1))
-     (cons (+ (car path) step) path))))
-  
-(when #t
-  (time
-   (test-case
-    "best test cases - KEEP! (caution does not work when cmd line is too long)"
-    (displayln "python haar...")
-    ;;(define xs '(1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0))
-    (define xs (map exact->inexact (random-walk 256 100)))
-    (define ps (hash 'fn "haar_arr" 'args (list xs)))
-    (define hs (pc:call-python-fn ps))
-    (define hsc (pc:list-of-lists->list (hash-ref hs 'results)))
-    (displayln "python haarI...")
-    (define pst (hash 'fn "haarI_arr" 'args (list hsc)))
-    (define xst (pc:call-python-fn pst))
-    (define xstc (pc:list-of-lists->list (hash-ref xst 'results)))
-    (displayln "racket haar...")
-    (define hs0 (haar xs))
-    (displayln "racket haarI...")
-    (define xst0 (haarI hs0))
-    (check-equal? (gt:list-equal-approx? xs xstc) #t)
-    (check-equal? (gt:list-equal-approx? hsc hs0) #t)
-    (check-equal? (gt:list-equal-approx? xs xst0) #t)
-    (displayln "passed all haar tests!")
-    (displayln "ToDo: check that racket haar/haarI do HP/LP well!")
-    (check-true #t))))
+(module+ test
 
-(when #t
-  (time
-   (test-case
-    "haar transform"
-    (define xs '(1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0))
-    (define data-1 (hash 'fn "haar_transform" 'args (list xs 0.1 1.0)))
-    (define batch (list data-1))
-    (define results (pc:call-python-fn batch))
-    (define results-clean (pc:list-of-lists->list (hash-ref results 'results)))
-    (define hs results-clean)
-    ;;(displayln hs)
-    (check-true #t))))
+  (require rackunit)
+  
+  (random-seed 0)
+  (define (random-walk n [start 100])
+    (reverse
+     (for/fold ([path (list start)]) ([i (in-range (sub1 n))])
+       (define step (if (zero? (random 2)) -1 1))
+       (cons (+ (car path) step) path))))
+  
+  (when #t
+    (time
+     (test-case
+      "best test cases - KEEP! (caution does not work when cmd line is too long)"
+      (displayln "python haar...")
+      ;;(define xs '(1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0))
+      (define xs (map exact->inexact (random-walk 256 100)))
+      (define ps (hash 'fn "haar_arr" 'args (list xs)))
+      (define hs (pc:call-python-fn ps))
+      (define hsc (pc:list-of-lists->list (hash-ref hs 'results)))
+      (displayln "python haarI...")
+      (define pst (hash 'fn "haarI_arr" 'args (list hsc)))
+      (define xst (pc:call-python-fn pst))
+      (define xstc (pc:list-of-lists->list (hash-ref xst 'results)))
+      (displayln "racket haar...")
+      (define hs0 (haar xs))
+      (displayln "racket haarI...")
+      (define xst0 (haarI hs0))
+      (check-equal? (gt:list-equal-approx? xs xstc) #t)
+      (check-equal? (gt:list-equal-approx? hsc hs0) #t)
+      (check-equal? (gt:list-equal-approx? xs xst0) #t)
+      (displayln "passed all haar tests!")
+      (displayln "ToDo: check that racket haar/haarI do HP/LP well!")
+      (check-true #t))))
+
+  (when #t
+    (time
+     (test-case
+      "haar transform"
+      (define xs '(1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0))
+      (define data-1 (hash 'fn "haar_transform" 'args (list xs 0.1 1.0)))
+      (define batch (list data-1))
+      (define results (pc:call-python-fn batch))
+      (define results-clean (pc:list-of-lists->list (hash-ref results 'results)))
+      (define hs results-clean)
+      ;;(displayln hs)
+      (check-true #t))))
+
+  )

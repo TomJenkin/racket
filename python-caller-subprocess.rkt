@@ -39,7 +39,32 @@
 
   (require rackunit syntax/location)
 
-  (when #t
+
+  (test-case
+   "kmeans interop"
+   
+   ;;(define data '((1 2) (3 4) (5 6) (7 8)))
+
+   (define args (for/list ([a (range 0 20)] [b (range 0 20)])
+                  (list a b)))
+
+   (define kwargs (hash 'n_clusters 3))
+
+   ;; define conversion function
+   (define (fn-data fn #:args [args (list)] #:kwargs [kwargs (hash)])
+     (hash 'fn fn 'args (list args) 'kwargs kwargs))
+  
+   (define ps (fn-data "kmeans" #:args args #:kwargs kwargs))
+   (displayln ps)
+   (define rs (call-python-fn ps))
+   (define rs1 (hash-ref rs 'results))
+   (displayln (first rs1))
+   (displayln (second rs1))
+   )
+  
+  ;; !! do a speed test into a dummy .py file with no libraries to check base speed of interop/python
+  
+  (when #f
     (time
      (test-case
       "single function tests"
@@ -55,21 +80,21 @@
       (define result (call-python-fn data))
       (check-true #t))))
 
-  (when #t
+  (when #f
     (time
-    (test-case
-     "batch tests"
-     (define data-1 (hash 'fn "dummy" 'args '((1 2 3 "hello"))))
-     (define data-2 (hash 'fn "add" 'args '(3 4)))
-     (define data-3 (hash 'fn "haar_arr" 'args '((1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0))))
-     (define data-4 (hash 'fn "haarI_arr" 'args '((12.7 -5.6 -2 -2 -0.7 -0.7 -0.7 -0.7))))
-     (define data-5 (hash 'fn "haar_filter" 'args '((12.7 -5.6 -2 -2 -0.7 -0.7 -0.7 -0.7) 0 1.0)))
-     (define batch (list data-1 data-2 data-3 data-4 data-5))
-     (define batch-result (call-python-fn batch))
-     (define results (hash-ref batch-result 'results))
-     (check-true #t)
-     (when #f (for ([e results] [n (in-naturals)])
-                (displayln (hash n e)))))))
+     (test-case
+      "batch tests"
+      (define data-1 (hash 'fn "dummy" 'args '((1 2 3 "hello"))))
+      (define data-2 (hash 'fn "add" 'args '(3 4)))
+      (define data-3 (hash 'fn "haar_arr" 'args '((1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0))))
+      (define data-4 (hash 'fn "haarI_arr" 'args '((12.7 -5.6 -2 -2 -0.7 -0.7 -0.7 -0.7))))
+      (define data-5 (hash 'fn "haar_filter" 'args '((12.7 -5.6 -2 -2 -0.7 -0.7 -0.7 -0.7) 0 1.0)))
+      (define batch (list data-1 data-2 data-3 data-4 data-5))
+      (define batch-result (call-python-fn batch))
+      (define results (hash-ref batch-result 'results))
+      (check-true #t)
+      (when #f (for ([e results] [n (in-naturals)])
+                 (displayln (hash n e)))))))
 
   (define module-name (path->string (syntax-source-file-name #'here)))
   (displayln (string-append module-name ": testing success!")))
