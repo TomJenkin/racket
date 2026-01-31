@@ -40,6 +40,18 @@
   (require rackunit syntax/location)
 
 
+  ;; in wrapper module:
+
+  (define (kmeans22 data n-clusters)
+
+    ;; change to let !!!!!!!!!!!!!!!!!!!!!!!!!!!
+    (define args  (list 'fn))
+    (define kwargs (hash 'data data 'n-clusters n-clusters))
+    
+    33)
+
+  
+
   (test-case
    "kmeans interop"
    
