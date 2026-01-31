@@ -37,27 +37,27 @@
 
   (require rackunit syntax/location (prefix-in gt:"gen-tools.rkt"))
 
-  (define RUN-TESTS #t)
-  
-  (when RUN-TESTS
-    (time
+  (time
+   
+   (when #t
+     
      (test-case
       "kmeans"
       (define xs (for/list ([a (range 0 20)] [b (range 0 20)]) (list a b)))
-      (check-true (hash? (kmeans xs 5 #:random-state 23))))
+      (check-true (hash? (kmeans xs 5 #:random-state 23)))
 
-     (test-case
-      "haar"
-      (let* ([xs (for/list ([a (range 0 20)]) (exact->inexact a))]
-             [hs (haar xs)]
-             [hsi (haarI hs)]
-             [hsir (gt:round-n hsi 9)]
-             [hsf (haar-filter hs 0.0 1.0)]
-             [xst (haar-transform xs 0.0 1.0)]
-             [xstr (gt:round-n xst 9)])
-        (check-equal? xs hsir)
-        (check-equal? hs hsf)
-        (check-equal? xs xstr)))))
+      (test-case
+       "haar"
+       (let* ([xs (for/list ([a (range 0 20)]) (exact->inexact a))]
+              [hs (haar xs)]
+              [hsi (haarI hs)]
+              [hsir (gt:round-n hsi 9)]
+              [hsf (haar-filter hs 0.0 1.0)]
+              [xst (haar-transform xs 0.0 1.0)]
+              [xstr (gt:round-n xst 9)])
+         (check-equal? xs hsir)
+         (check-equal? hs hsf)
+         (check-equal? xs xstr)))))
 
-  (define module-name (path->string (syntax-source-file-name #'here)))
-  (displayln (string-append module-name ": testing success!")))
+   (define module-name (path->string (syntax-source-file-name #'here)))
+   (displayln (string-append module-name ": testing success!"))))

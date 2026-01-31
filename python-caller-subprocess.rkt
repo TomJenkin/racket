@@ -2,13 +2,12 @@
 
 (require json)
 
-(provide call-python-fn
-         list-of-lists->list)
+(provide call-python-fn)
+
+;(define (list-of-lists->list ls) (map (lambda (e) (first e)) ls))
 
 (define python-exe "C:\\Users\\tomje\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe")
 (define python-module "C:\\Users\\tomje\\Documents\\Code\\nets\\dispatcher.py")
-
-(define (list-of-lists->list ls) (map (lambda (e) (first e)) ls))
 
 (define (call-python-fn data
                         #:python [python python-exe]
@@ -35,21 +34,20 @@
   (define result (string->jsexpr stdout))
   result)
 
-
 (module+ test
 
   (require rackunit syntax/location)
 
-  (when #t
-    (time
+  (time
+
+   (when #t
      ; when no costly imports in python file then much faster run time!
      (define params (hash 'fn "dummy" 'args (list '(1 2 3 "hello")) 'kwargs (hash 'b 35)))
      (define script "C:\\Users\\tomje\\Documents\\Code\\nets\\dispatcher_simple.py")
      (define result (hash-ref (call-python-fn params #:script script) 'results))
-     (check-equal? result '((1 2 3 "hello") 35))))
+     (check-equal? result '((1 2 3 "hello") 35)))
   
-  (when #f
-    (time
+   (when #t
      (test-case
       "single function tests"
       (random-seed 0)
@@ -62,10 +60,9 @@
       (define xs (map exact->inexact (random-walk 1024 100)))
       (define data (hash 'fn "haar_arr" 'args (list xs)))
       (define result (call-python-fn data))
-      (check-true #t))))
+      (check-true #t)))
 
-  (when #f
-    (time
+   (when #t
      (test-case
       "batch tests"
       (define data-1 (hash 'fn "dummy" 'args '((1 2 3 "hello"))))
@@ -78,7 +75,7 @@
       (define results (hash-ref batch-result 'results))
       (check-true #t)
       (when #f (for ([e results] [n (in-naturals)])
-                 (displayln (hash n e)))))))
+                 (displayln (hash n e))))))
 
-  (define module-name (path->string (syntax-source-file-name #'here)))
-  (displayln (string-append module-name ": testing success!")))
+   (define module-name (path->string (syntax-source-file-name #'here)))
+   (displayln (string-append module-name ": testing success!"))))
