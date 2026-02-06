@@ -28,14 +28,16 @@
                             (map (λ (av de) (list (+ av de) (- av de))) a det))])
           (loop next (drop rest m) (* 2 m))))))
 
-
 (module+ test
-
+  
   (require rackunit)
   
   (define xs (map exact->inexact (range 0 (expt 2 10))))
   (displayln (length xs))
   (check-equal? (haarI (haar xs)) xs)
   (time (void (haarI (haar xs))))
+
+  (define ys '(1 1 1 1 2 2 2 2))
+  (displayln (haar ys))
  
-  )
+  (displayln "complete!"))
