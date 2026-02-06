@@ -2,6 +2,8 @@
 
 ;; this is the best haar wavelet library / use this!
 
+(provide haar haarI)
+
 (define (haar xs)
   (define n (length xs))
   (unless (and (positive? n) (zero? (bitwise-and n (sub1 n))))
