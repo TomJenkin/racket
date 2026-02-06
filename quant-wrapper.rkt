@@ -2,6 +2,8 @@
 
 (require (prefix-in pc:"python-caller-subprocess.rkt"))
 
+(provide kmeans haar haarI haar-filter haar-transform)
+
 (define (kmeans xs n-clusters #:random-state [random-state 0])
   (let* ([ps (hash 'fn "kmeans" 'args (list xs n-clusters) 'kwargs (hash 'random_state random-state))]
          [ls (hash-ref (pc:call-python-fn ps) 'results)]
@@ -38,8 +40,13 @@
   (require rackunit syntax/location (prefix-in gt:"gen-tools.rkt"))
 
   (time
-   
+
    (when #t
+     (define xs (map exact->inexact '(1 1 1 1 2 2 2 2)))
+     (displayln (haar xs))
+     )
+   
+   (when #f
      
      (test-case
       "kmeans"
