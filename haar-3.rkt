@@ -7,7 +7,7 @@
 (define (haar xs)
   (define n (length xs))
   (unless (and (positive? n) (zero? (bitwise-and n (sub1 n))))
-    (error 'haar-flat "length must be power of two, got ~a" n))
+    (error 'haar "length must be power of two, got ~a" n))
   (let loop ([a (map exact->inexact xs)] [out '()])
     (if (null? (cdr a))
         (cons (car a) out)
