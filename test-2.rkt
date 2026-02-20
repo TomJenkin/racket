@@ -60,3 +60,42 @@ data
                         (fib (- n 2)))])))))
 
 (fibonacci 10)  ; => 55
+
+
+(for/list ([n (range 0 10)] [m (range 5 600)])
+  (list n m))
+
+(define mx
+  (vector
+   (for/list ([n (range 0 5)])
+     (for/list ([m (range 0 5)])
+       (list n m)))))
+
+mx
+
+(when #t 1)
+
+(define-syntax-rule (when123 test body ...)
+  (if test
+      (begin body ...)
+      (void)))
+
+(when123 #t 33)
+
+(define-syntax-rule (grid/list (n n0 n1) (m m0 m1) body ...)
+  (for/list ([n (range n0 n1)])
+    (for/list ([m (range m0 m1)])
+      body ...)))
+
+(grid/list (n 0 5) (m 0 5)
+           (list n m))
+
+(define (grid/list/fn n0 n1 m0 m1)
+  (for/list ([n (range 0 5)])
+    (for/list ([m (range 0 5)])
+      (list n m))))
+
+(grid/list/fn 0 5 0 5)
+
+
+

@@ -33,15 +33,19 @@
 (module+ test
   
   (require rackunit
-           (prefix-in qw: "quant-wrapper.rkt"))
+           ;;(prefix-in qw: "quant-wrapper.rkt")
+           )
   
   (define xs (map exact->inexact (range 0 (expt 2 10))))
-  (displayln (length xs))
+  (displayln (format "Length: ~a" (length xs)))
   (check-equal? (haarI (haar xs)) xs)
   (time (void (haarI (haar xs))))
 
-  (define ys (map exact->inexact '(1 1 1 1 2 2 2 2)))
-  (displayln (haar ys)) ; this looks correct: (1.5 -0.5 0.0 0.0 0.0 0.0 0.0 0.0)
-  (displayln (qw:haar ys)) ; why not the same, this looks wrong: (4.2 -1.4 0.0 0.0 0.0 0.0 0.0 0.0)
+  ;; keep this until find out why python is wrong!
+  ;;(define ys (map exact->inexact '(1 1 1 1 2 2 2 2)))
+  ;;(displayln (haar ys)) ; this looks correct: (1.5 -0.5 0.0 0.0 0.0 0.0 0.0 0.0)
+  ;;(displayln (qw:haar ys)) ; why not the same, this looks wrong: (4.2 -1.4 0.0 0.0 0.0 0.0 0.0 0.0)
  
-  (displayln "complete!"))
+  ;;(displayln "complete!")
+
+  )

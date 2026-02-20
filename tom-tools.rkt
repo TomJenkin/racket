@@ -87,5 +87,20 @@
              (define ns (make-base-namespace))
              (check-equal? (eval '((λ (x) x) 'something) ns) 'something))
 
- 
-  )
+
+  (displayln "evaluation tests...")
+  (define (eval/empty expr) (evaluate expr empty-env))
+  (eval/empty '34)
+  (eval/empty '(λ (x) x))
+  (eval/empty '(λ (x) 'something))
+  (eval/empty '((λ (x) x) 66))
+
+  (displayln "==========================================")
+
+  (test-case "evaluation tests"
+             (define (eval/empty expr) (evaluate expr empty-env))
+             (define es '(34 (λ (x) x) ((λ (x) x) 88)))
+             (for ([e es])
+               (display e)
+               (display " ==> ")
+               (displayln (eval/empty e)))))
