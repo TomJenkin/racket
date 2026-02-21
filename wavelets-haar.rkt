@@ -34,4 +34,3 @@
   (displayln (format "Length of input: ~a" (length xs)))
   (check-equal? (haarI (haar xs)) xs)
   (time (void (haarI (haar xs)))))
-
