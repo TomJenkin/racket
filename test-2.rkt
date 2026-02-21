@@ -83,8 +83,8 @@ mx
 (when123 #t 33)
 
 (define-syntax-rule (grid/list (n n0 n1) (m m0 m1) body ...)
-  (for/list ([n (range n0 n1)])
-    (for/list ([m (range m0 m1)])
+  (for/list ([n (in-range n0 n1)])
+    (for/list ([m (in-range m0 m1)])
       body ...)))
 
 (grid/list (n 0 5) (m 0 5)
@@ -97,5 +97,53 @@ mx
 
 (grid/list/fn 0 5 0 5)
 
+(define-syntax-rule (grid/list/1 (n n0 n1) (m m0 m1) xx)
+  (for/list ([n (range n0 n1)])
+    (for/list ([m (range m0 m1)])
+      xx)))
+
+(grid/list/1 (n 0 4) (m 0 4)
+             (list n m))
+
+(grid/list/1 (n 0 3) (m 5 7)
+             (list (list n m) (list n m)))
+
+
+(grid/list/1 (n 0 3) (m 0 3)
+             (list n m))
+
+(displayln ".............................................")
+
+(grid/list (n 0 2) (m 0 2)
+           (displayln "tom")
+           (list n m))
+
+(grid/list (n 0 3) (m 0 3) null)
+
+(for/hash ([n (in-range 0 5)]
+           [m (in-range 1 5)])
+  (values n m))
+
+(for/sum ([n (in-range 0 11)])
+  n)
+
+(for*/list ([n (in-range 0 5)]
+            [m (in-range 0 5)]
+            #:when (even? n)
+            #:when (even? m))
+  (list n m))
+
+(define (grid/list/fn2 n0 n1 m0 m1 f)
+  (for/list ([n (in-range n0 n1)])
+    (for/list ([m (in-range m0 m1)])
+      (f n m))))
+
+(grid/list/fn2 0 3 0 3 *)
+
+(define aa
+  (grid/list/fn2 0 3 0 3
+                 (λ (n m) (+ n m))))
+
+aa
 
 
