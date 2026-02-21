@@ -4,10 +4,18 @@
 
 (provide kmeans haar haarI haar-filter haar-transform)
 
+;; keep for minute, legacy...
+#| (define (kmeans xs n-clusters #:random-state [random-state 0])
+     (let* ([ps (hash 'fn "kmeans" 'args (list xs n-clusters) 'kwargs (hash 'random_state random-state))]
+            [ls (hash-ref (pc:call-python-fn ps) 'results)]
+            [result (hash 'labels (first ls) 'centroids (second ls))])
+    result)) |#
+
 (define (kmeans xs n-clusters #:random-state [random-state 0])
   (let* ([ps (hash 'fn "kmeans" 'args (list xs n-clusters) 'kwargs (hash 'random_state random-state))]
          [ls (hash-ref (pc:call-python-fn ps) 'results)]
-         [result (hash 'labels (first ls) 'centroids (second ls))])
+         ;[result (hash 'labels (first ls) 'centroids (second ls))]
+         [result (hash 'centroids (second ls) 'assignments (first ls))])
     result))
 
 (define (haar xs)

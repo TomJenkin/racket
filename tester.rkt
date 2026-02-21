@@ -8,7 +8,13 @@
   (prefix-in cl: "cluster-kmeans.rkt")
   (prefix-in sd: "sample-data.rkt")
   (prefix-in wt: "wavelets-haar.rkt")
+  (prefix-in qw: "quant-wrapper.rkt")
   )
+
+;; not working returns zero time
+;(define (time/label label thunk)
+;  (displayln (format "~a:" label))
+;  (time thunk))
 
 (define (normalize xs)
   (define mn (apply min xs))
@@ -18,27 +24,26 @@
       (map (λ (_) 0.0) xs)   ; all values identical → all zeros
       (map (λ (x) (/ (- x mn) range)) xs)))
 
-(define (process-data)
+(define (process-data rolling-win-length n-clusters)
   (define data-1 sd:data-sp500)
-  (define rolling-win-length 32)
   (define tail (gt:rolling (λ (e) e) rolling-win-length (dt:table-read data-1 "close")))
   (define data-2 (dt:table-dropna (dt:table-create data-1 "tail" tail)))
   (define fn (compose wt:haar normalize))
   (define data-3 (dt:table-create data-2 "tail-rel" (map fn (dt:table-read data-2 "tail"))))
-  (define n-clusters 6)
-  (define cluster-hash (cl:kmeans (dt:table-read data-3 "tail-rel") n-clusters 5000))
+  ;(displayln "kmeans:")
+  (define cluster-hash (time (cl:kmeans (dt:table-read data-3 "tail-rel") n-clusters 5000)))
+  ;(define cluster-hash (qw:kmeans (dt:table-read data-3 "tail-rel") n-clusters))
   (define assignments (hash-ref cluster-hash 'assignments))
   (define centroids   (hash-ref cluster-hash 'centroids))
   (define data-4 (dt:table-create data-3 "label" assignments))
-  ;(define data (dt:table-tail data-4 5))
-  (define data data-4)
-  (hash 'data data 'data-1 data-1 'centroids centroids))
+  (hash 'data data-4 'data-1 data-1 'centroids centroids))
 
-(define bundle (process-data))
+;(displayln "full:")
+(define bundle (time (process-data 32 12)))
 (define dates1 (dt:table-read (hash-ref bundle 'data) "date"))
 (define values1 (dt:table-read (hash-ref bundle 'data) "label"))
 (define means1 (hash-ref bundle 'centroids))
-
+ 
 (dt:table-print (hash-ref bundle 'data-1) 5 #:head #f)
 
 ;; PLOTS
