@@ -101,6 +101,12 @@
 ;; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
+
+;(gt:rolling (λ (e) e) rolling-win-length (dt:table-read dt1 "close"))
+
+
+
+
 ;; PLOTS
 
 ;; plot cluster groups/labels

@@ -1,16 +1,25 @@
 #lang racket
 
-(provide
- (contract-out
-  [kmeans kmeans/c]))
+#| (provide
+    (contract-out
+  [kmeans kmeans/c])) |#
 
-(define kmeans/c
-  (-> (non-empty-listof (listof real?))        ; points
-      exact-nonnegative-integer?               ; k
-      exact-nonnegative-integer?               ; iters
-      (values
-       (listof (listof real?))                 ; centroids
-       (listof exact-nonnegative-integer?))))  ; assignments
+(provide kmeans)
+
+#| (define kmeans/c
+     (-> (non-empty-listof (listof real?))        ; points
+         exact-nonnegative-integer?               ; k
+         exact-nonnegative-integer?               ; iters
+         (hash/c 'centroids (listof (listof real?))
+              'assignments (listof exact-nonnegative-integer?)))) |#
+
+#| (define kmeans/c
+     (-> (non-empty-listof (listof real?))        ; points
+         exact-nonnegative-integer?               ; k
+         exact-nonnegative-integer?               ; iters
+         (values
+          (listof (listof real?))                 ; centroids
+       (listof exact-nonnegative-integer?))))  ; assignments |#
 
 (define (kmeans points k iters #:verbose [verbose #f])
   (define (dist2 p q) (for/sum ([x p] [y q]) (sqr (- x y))))
@@ -26,13 +35,17 @@
         (begin
           (when verbose
             (printf "k-means converged (iterations = ~a)\n" (- iters i)))
-          (values new-cs assns))
+          ;;(values new-cs assns))
+          (hash 'centroids new-cs 'assignments assns))
         (loop new-cs (sub1 i)))))
 
 (module+ test
   (require rackunit (prefix-in gt: "gen-tools.rkt"))
   (time
    (define pts '((1 1) (1.1 0.9) (0.9 1.2) (5 5) (5.2 4.8) (4.9 5.1)))
-   (define-values (centroids assignments) (kmeans pts 2 1000))
+   ;;(define-values (centroids assignments) (kmeans pts 2 1000))
+   (define cluster-hash (kmeans pts 2 1000))
+   (define centroids (hash-ref cluster-hash 'centroids))
+   (define assignments (hash-ref cluster-hash 'assignments))
    (check-equal? (map (λ (row) (map (λ (e) (gt:round/n e 2)) row)) centroids) '((5.03 4.97) (1.0 1.03)))
    (check-equal? assignments '(1 1 1 0 0 0))))
