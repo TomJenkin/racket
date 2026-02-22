@@ -5,6 +5,7 @@
   math
   math/statistics
   racket/date
+  racket/string
   (prefix-in dt: "data-table.rkt")
   (prefix-in gt: "gen-tools.rkt")
   (prefix-in cl: "cluster-kmeans.rkt")
@@ -33,6 +34,7 @@
 
 (define (process-data rolling-win-length n-clusters iters)
   (define data-1 sd:data-sp500)
+  (displayln (dt:table-shape data-1))
   (define tail (gt:rolling (λ (e) e) rolling-win-length (dt:table-read data-1 "close")))
   (define data-2 (dt:table-dropna (dt:table-create data-1 "tail" tail)))
   (define fn (compose wt:haar normalize))
@@ -50,7 +52,7 @@
   (define data-7 (dt:table-dropna data-6))
   (hash 'data data-7 'data-1 data-1 'centroids centroids 'centroidsI centroidsI))
 
-(define bundle (gt:timeit "full" (process-data 32 10 5000)))
+(define bundle (gt:timeit "full" (process-data 32 20 5000)))
 (define dates1 (dt:table-read (hash-ref bundle 'data) "date"))
 (define values1 (dt:table-read (hash-ref bundle 'data) "label"))
 (define means1 (hash-ref bundle 'centroidsI))
@@ -64,22 +66,51 @@
   (for ([cat cats] [val metrics])
     (hash-update! groups cat (λ (lst) (cons val lst)) '()))
   ;; Compute multiple stats
-  (for/hash ([(cat vals) (in-hash groups)])
-    (values cat 
-            (hash 'count (length vals)
-                  'mean (mean vals)
-                  'stdev (stddev vals)
-                  'skew (skewness vals)
-                  'kurt (kurtosis vals)
-                  'sum (apply + vals)
-                  'min (apply min vals)
-                  'max (apply max vals)))))
+  (for/list ([(cat vals) (in-hash groups)])
+    (hash 'cluster cat
+          'count (length vals)
+          'mean (mean vals)
+          'stdev (stddev vals)
+          'skew (skewness vals)
+          'kurt (kurtosis vals)
+          'sum (apply + vals)
+          'min (apply min vals)
+          'max (apply max vals))))
 
 ;; print out group
-(group-stats-multi cats metrics)
+(define hs (group-stats-multi cats metrics))
+
+;(take hs 2)
+
+(define (hashes->table hs)
+  (define keys (hash-keys (first hs)))
+  (cons keys
+        (map (λ (h)
+               (map (λ (k) (hash-ref h k #f)) keys))
+             hs)))
+   
+(define hst (hashes->table hs))
+
+(define (table->csv table path)
+  (call-with-output-file path
+    (λ (out)
+      (for ([row table])
+        (fprintf out "~a\n"
+                 (string-join (map ~a row) ","))))
+    #:exists 'replace))
+   
+(table->csv hst "C:/Users/tomje/Downloads/test.csv")
+
+(define dtr (dt:table (first hst) (rest hst)))
+
+(dt:table-print dtr 3)
+
+
+
+
 
 ;(dt:table-headers (hash-ref bundle 'data))
-(dt:table-print (dt:table-project (hash-ref bundle 'data) '("date" "close" "label" "change" "change-next")) 5 #:head #f)
+;(dt:table-print (dt:table-project (hash-ref bundle 'data) '("date" "close" "label" "change" "change-next")) 5 #:head #f)
 
 ;; PLOTS
 

@@ -170,6 +170,7 @@
       [(number? e) (real->decimal-string e 2)]
       [(string? e) (if (string=? e "") "NA" e)]
       [(list? e) (if (equal? e null) "NA" (format "~a" e))]
+      [(symbol? e) (symbol->string e)]
       [else e]))
   
   ;; max column widths
