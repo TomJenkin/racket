@@ -38,16 +38,18 @@
 
   (require rackunit syntax/location)
 
+  (define debug-mode #f)
+
   (time
 
-   (when #t
+   (when debug-mode
      ; when no costly imports in python file then much faster run time!
      (define params (hash 'fn "dummy" 'args (list '(1 2 3 "hello")) 'kwargs (hash 'b 35)))
      (define script "C:\\Users\\tomje\\Documents\\Code\\nets\\dispatcher_simple.py")
      (define result (hash-ref (call-python-fn params #:script script) 'results))
      (check-equal? result '((1 2 3 "hello") 35)))
   
-   (when #t
+   (when debug-mode
      (test-case
       "single function tests"
       (random-seed 0)
@@ -62,7 +64,7 @@
       (define result (call-python-fn data))
       (check-true #t)))
 
-   (when #t
+   (when debug-mode
      (test-case
       "batch tests"
       (define data-1 (hash 'fn "dummy" 'args '((1 2 3 "hello"))))

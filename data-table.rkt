@@ -9,6 +9,7 @@
          table-shape
          table-create
          table-read
+         table-project
          table-update
          table-delete
          table-filter
@@ -74,6 +75,10 @@
   (define idx (col-index (table-headers t) name 'table-col))
   (for/list ([row (in-list (table-rows t))])
     (list-ref row idx)))
+
+;; project columns to new table
+(define (table-project t names)
+  (table names (apply map list (for/list ([e names]) (table-read t e)))))
 
 ;; add a new column at the end
 (define (table-create t name values)
@@ -218,5 +223,6 @@
   (check-equal? (table-headers (table-rename t1 ns)) '("date" "close"))
   (check-true (> (first (table-shape t1)) (first (table-shape (table-dropna (table-replace t1 "" '()))))))
   ;;(table-print t1 3 #:head #f)
-
+  (check-equal? (table-project t0 (table-headers t0)) t0)
+  
   )
