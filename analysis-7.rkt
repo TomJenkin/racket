@@ -1,26 +1,23 @@
 #lang racket
 
-(require
-  plot
-  math
-  json
-  math/statistics
-  racket/date
-  racket/string
-  (prefix-in dt: "data-table.rkt")
-  (prefix-in gt: "gen-tools.rkt")
-  (prefix-in cl: "cluster-kmeans.rkt")
-  (prefix-in sd: "sample-data.rkt")
-  (prefix-in wt: "wavelets-haar.rkt")
-  (prefix-in qw: "quant-wrapper.rkt")
-  )
+(require math
+         json
+         math/statistics
+         srfi/19
+         racket/string
+         (prefix-in dt: "data-table.rkt")
+         (prefix-in gt: "gen-tools.rkt")
+         (prefix-in cl: "cluster-kmeans.rkt")
+         (prefix-in sd: "sample-data.rkt")
+         (prefix-in wt: "wavelets-haar.rkt")
+         (prefix-in qw: "quant-wrapper.rkt"))
 
 (define (normalize xs)
   (define mn (apply min xs))
   (define mx (apply max xs))
   (define range (- mx mn))
   (if (zero? range)
-      (map (λ (_) 0.0) xs)   ; all values identical → all zeros
+      (map (λ (_) 0.0) xs) ; all values identical → all zeros
       (map (λ (x) (/ (- x mn) range)) xs)))
 
 (define (pct-changes ls)
@@ -34,10 +31,8 @@
     [else ls]))
 
 (define (process-data rolling-win-length n-clusters iters)
-  (define data-1 sd:data-sp500)
-
-  ;;(define data-333 (dt:table-update data-1 "date" (map (λ (e) (date->string e "~Y-~m-~d")) (dt:table-read data-1 "date"))))
-  
+  (define data-0 sd:data-sp500)
+  (define data-1 (dt:table-update data-0 "date" (λ (e) (date->string e "~Y-~m-~d"))))
   (displayln (dt:table-shape data-1))
   (define tail (gt:rolling (λ (e) e) rolling-win-length (dt:table-read data-1 "close")))
   (define data-2 (dt:table-dropna (dt:table-create data-1 "tail" tail)))
@@ -54,98 +49,23 @@
   (define data-5 (dt:table-create data-4 "change" (pct-changes (dt:table-read data-4 "close"))))
   (define data-6 (dt:table-create data-5 "change-next" (list-shift (dt:table-read data-5 "change") -1)))
   (define data-7 (dt:table-dropna data-6))
-  (hash 'data data-7 'data-1 data-1 'centroids centroids 'centroidsI centroidsI))
+  (hash 'data data-7 'centroids centroids 'centroidsI centroidsI))
 
-(define bundle (gt:timeit "full" (process-data 32 20 5000)))
-(define dates1 (dt:table-read (hash-ref bundle 'data) "date"))
-(define values1 (dt:table-read (hash-ref bundle 'data) "label"))
-(define means1 (hash-ref bundle 'centroidsI))
-
-(define cats (dt:table-read (hash-ref bundle 'data) "label"))
-(define metrics (dt:table-read (hash-ref bundle 'data) "change-next"))
-
-(define (group-stats-multi cats metrics)
-  (define groups (make-hash))
-  ;; Group metrics
-  (for ([cat cats] [val metrics])
-    (hash-update! groups cat (λ (lst) (cons val lst)) '()))
-  ;; Compute multiple stats
-  (for/list ([(cat vals) (in-hash groups)])
-    (hash 'cluster cat
-          'count (length vals)
-          'mean (mean vals)
-          'stdev (stddev vals)
-          'skew (skewness vals)
-          'kurt (kurtosis vals)
-          'sum (apply + vals)
-          'min (apply min vals)
-          'max (apply max vals))))
-
-;; print out group
-(define hs (group-stats-multi cats metrics))
+(define bundle (gt:timeit "process-data" (process-data 32 20 5000)))
 
 
 ;; export ======================================================================
 
 (define package
-  (hash 'hs hs
-        'dates1 (map (λ (e) (date->string e "~Y-~m-~d")) dates1)
-        'values1 values1
-        'means1 means1))
+  (hash 'data (dt:table->list (hash-ref bundle 'data))
+        'centroids (hash-ref bundle 'centroids)
+        'centroidsI (hash-ref bundle 'centroidsI)))
 
-(define path "G:/My Drive/Common/Documents/Code/Racket")
-(define fname (string-append path "/Data/racket_package_01.json"))
+(when #t
+  ;; export data to json file
+  (let ([fname "G:/My Drive/Common/Documents/Code/Racket/Data/racket_package_01.json"])
+    (call-with-output-file fname
+      (lambda (out) (write-json package out))
+      #:exists 'replace)))
 
-(call-with-output-file fname
-  (lambda (out) (write-json package out))
-  #:exists 'replace)
-
-
-
-
-
-
-#| 
-   
-   ;; PLOTS
-   
-   ;; plot cluster groups/labels
-   (define (plot-dates-values dates1 values1)
-     (parameterize ([plot-x-ticks (date-ticks)]
-                    [plot-width 500]
-                    [plot-height 250])
-       (plot
-        (lines
-         (map vector
-              (map date->seconds dates1)
-              values1))
-        #:x-label "Date"
-        #:y-label "Value")))
-   
-   (plot-dates-values dates1 values1)
-   
-   ;; plot cluster means
-   (define (plot-many-series series-list)
-     (define renderers
-       (for/list ([ys series-list] [i (in-naturals 1)])
-         (define pts
-           (for/list ([y ys] [x (in-naturals 0)])
-             (vector x y)))
-         (lines pts
-                ;;#:label (format "series ~a" i)
-                )))
-      
-     (parameterize ([plot-x-label "Index"]
-                    [plot-y-label "Value"]
-                    [plot-width 500]
-                    [plot-height 250]
-                    ;;[plot-x-grid? #t]
-                    ;;[plot-y-grid? #t]
-                    )
-       (plot renderers)))
-      
-   (plot-many-series means1)
-   
-   
- |#
 
