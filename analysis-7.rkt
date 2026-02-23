@@ -59,13 +59,24 @@
         [iters 5000])
     (gt:timeit "process-data" (process-data rolling-win-length n-clusters iters))))
 
+(define (distances centroids)
+  (define (dist2 p q) (for/sum ([x p] [y q]) (sqr (- x y))))
+  (for/list ([x centroids])
+    (for/list ([y centroids])
+      (dist2 x y))))
+
+(define dist (distances (hash-ref bundle 'centroids)))
+(define distI (distances (hash-ref bundle 'centroidsI)))
+
 ;; export ======================================================================
 
 (define package
   ;; export package
   (hash 'data (dt:table->list (hash-ref bundle 'data))
         'centroids (hash-ref bundle 'centroids)
-        'centroidsI (hash-ref bundle 'centroidsI)))
+        'centroidsI (hash-ref bundle 'centroidsI)
+        'dist dist
+        'distI distI))
 
 (when #t
   ;; write json file
