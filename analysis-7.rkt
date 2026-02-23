@@ -37,7 +37,12 @@
   (define data-1 (dt:table-update data-0 "date" (λ (e) (date->string e "~Y-~m-~d"))))
   (define tail (gt:rolling (λ (e) e) rolling-win-length (dt:table-read data-1 "close")))
   (define data-2 (dt:table-dropna (dt:table-create data-1 "tail" tail)))
-  (define fn (compose wt:haar normalize))
+  
+  ;(define fn (compose wt:haar normalize))
+  (define fn normalize) ; dummy temp!
+  ;;;;(define fn (λ (e) e)) ; dummy temp!
+  ;;;;(define fn wt:haar) ; dummy temp!
+  
   (define data-3 (dt:table-create data-2 "tail_rel" (map fn (dt:table-read data-2 "tail"))))
   (define cluster-hash
     (if #t
@@ -45,7 +50,10 @@
         (gt:timeit "kmeans/sklearn" (qw:kmeans (dt:table-read data-3 "tail_rel") n-clusters))))
   (define assignments (hash-ref cluster-hash 'assignments))
   (define centroids   (hash-ref cluster-hash 'centroids))
-  (define centroidsI (map wt:haarI centroids))  
+  
+  ;(define centroidsI (map wt:haarI centroids))
+  (define centroidsI centroids) ; dummy temp!
+  
   (define data-4 (dt:table-create data-3 "label" assignments))
   (define data-5 (dt:table-create data-4 "change" (pct-changes (dt:table-read data-4 "close"))))
   (define data-6 (dt:table-create data-5 "change_next" (list-shift (dt:table-read data-5 "change") -1)))
@@ -54,16 +62,16 @@
 
 (define bundle
   ;; run data
-  (let ([rolling-win-length 32]
-        [n-clusters 60]
+  (let ([rolling-win-length 128]
+        [n-clusters 20]
         [iters 5000])
     (gt:timeit "process-data" (process-data rolling-win-length n-clusters iters))))
 
 (define (distances centroids)
   (define (dist2 p q) (for/sum ([x p] [y q]) (sqr (- x y))))
-  (for/list ([x centroids])
-    (for/list ([y centroids])
-      (dist2 x y))))
+  (for/list ([p centroids])
+    (for/list ([q centroids])
+      (dist2 p q))))
 
 (define dist (distances (hash-ref bundle 'centroids)))
 (define distI (distances (hash-ref bundle 'centroidsI)))
